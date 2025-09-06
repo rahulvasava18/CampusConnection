@@ -35,6 +35,7 @@ export const RegisterUser = async (req, res) => {
 
 
 const generateToken = (id) => {
+  // console.log("Generating token for user ID:", id);
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: '30d', // token validity
   });
@@ -43,7 +44,10 @@ const generateToken = (id) => {
 
 export const LoginUser = async (req, res) => {
   try {
+    
+    
     const { username, password } = req.body;
+    // console.log(req.body); 
 
     if (!username || !password) {
       return res.status(400).json({ message: 'Username and password are required' });
