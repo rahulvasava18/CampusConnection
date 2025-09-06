@@ -19,7 +19,7 @@ const eventSchema = new mongoose.Schema({
   },
 
   location: {
-    type: { type: String, enum: ['On-campus', 'Online'], required: true },
+    type: { type: String, required: true },
     venue: String,
     googleMapLink: String,
     meetingLink: String
@@ -56,22 +56,21 @@ const eventSchema = new mongoose.Schema({
 
   engagement: {
     upvotes: { type: Number, default: 0 },
-    interestedCount: { type: Number, default: 0 },
     goingCount: { type: Number, default: 0 }
   },
 
-  liveUpdates: [{
-    time: { type: Date, default: Date.now },
-    message: String,
-    images: [String]
-  }],
+  // liveUpdates: [{
+  //   time: { type: Date, default: Date.now },
+  //   message: String,
+  //   images: [String]
+  // }],
 
-  memoryWall: [{
-    uploaderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    imageUrl: String,
-    caption: String,
-    taggedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
-  }],
+  // memoryWall: [{
+  //   uploaderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  //   imageUrl: String,
+  //   caption: String,
+  //   taggedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
+  // }],
 
   createdAt: { type: Date, default: Date.now }
 });
