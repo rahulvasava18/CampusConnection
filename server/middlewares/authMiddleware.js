@@ -6,7 +6,6 @@ export const protect = async (req, res, next) => {
   try {
 
     if (!req.headers.authorization) {
-      console.log("no token found in req");
       return res.status(401).json({ message: "No token, authorization denied" });
     }
 

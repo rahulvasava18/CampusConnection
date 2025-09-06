@@ -100,7 +100,7 @@ const handleSubmit = async (e) => {
     techArray.forEach((tech) => formData.append("techStack[]", tech));
   
     try{
-    const response = await axios.post("/api/projects", payload,{ timeout: 5000 });
+    const response = await axios.post("/api/projects", { timeout: 5000 } );
 
     if (response.status === 201 || response.status === 200) {
       setSuccess("Project created successfully!");

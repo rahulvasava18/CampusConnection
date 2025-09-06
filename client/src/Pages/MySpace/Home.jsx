@@ -56,10 +56,11 @@ export default function Home() {
           ))
         ) : (
           <div className="flex flex-col items-center justify-center p-10 text-gray-500 bg-white rounded-lg shadow-md  m-">
-            {/* <img
+            <img
               src="https://res.cloudinary.com/dqcnxw5b9/image/upload/v1756223601/default_fmxln5.png"
               alt="No posts"
-            /> */}
+              className="w-32 h-32 mb-4"
+            /> 
             <p className="text-lg font-medium">No posts found</p>
             <p className="text-sm text-gray-400">
               Check back later or follow people to see their posts.

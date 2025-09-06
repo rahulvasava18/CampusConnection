@@ -8,8 +8,7 @@ import mongoose from "mongoose";
 
 export const GetProfile = async(req,res) => {
   try {
-    const { userId } = req.params;  // changed to query, right?
-    console.log("get profile from userId",userId);
+    const { userId } = req.params;  
     if (!userId) {
       return res.status(400).json({ message: "User ID is required" });
     }
