@@ -1,5 +1,19 @@
 import React, { useState, useRef } from "react";
-import { Upload, X, MapPin, Calendar, Hash, Globe, Building, ArrowLeft, ArrowRight, CheckCircle, User, ExternalLink } from "lucide-react";
+import {
+  Upload,
+  X,
+  MapPin,
+  Calendar,
+  Hash,
+  Globe,
+  Building,
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle,
+  User,
+  ExternalLink,
+} from "lucide-react";
+import axios from "axios";
 
 const EventPost = ({ darkMode, onBack }) => {
   const [name, setName] = useState("");
@@ -19,6 +33,7 @@ const EventPost = ({ darkMode, onBack }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [uploadedImage, setUploadedImage] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
+  
   const fileInputRef = useRef(null);
 
   const categories = [
@@ -30,7 +45,7 @@ const EventPost = ({ darkMode, onBack }) => {
     "Social",
     "Cultural",
     "Sports",
-    "Other"
+    "Other",
   ];
 
   const handleDragOver = (e) => {
@@ -55,7 +70,7 @@ const EventPost = ({ darkMode, onBack }) => {
   };
 
   const handleFiles = (files) => {
-    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    const imageFiles = files.filter((file) => file.type.startsWith("image/"));
     if (imageFiles.length === 0) return;
     const file = imageFiles[0];
     const newImage = { file, preview: URL.createObjectURL(file) };
@@ -77,12 +92,12 @@ const EventPost = ({ darkMode, onBack }) => {
       }
     }
     setError(null);
-    setActiveStep(prev => prev + 1);
+    setActiveStep((prev) => prev + 1);
   };
 
   const handleBack = () => {
     setError(null);
-    setActiveStep(prev => prev - 1);
+    setActiveStep((prev) => prev - 1);
   };
 
   const validateForm = () => {
@@ -107,19 +122,22 @@ const EventPost = ({ darkMode, onBack }) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
-    
+
     const validationError = validateForm();
     if (validationError) {
       setError(validationError);
       return;
     }
 
-    const tagsArray = tags.split(",").map((t) => t.trim()).filter(Boolean);
-    
+    const tagsArray = tags
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
+
     let locationData = {
       type: location,
     };
-    
+
     if (location === "Online") {
       if (meetingLink.trim()) {
         locationData.meetingLink = meetingLink.trim();
@@ -130,7 +148,7 @@ const EventPost = ({ darkMode, onBack }) => {
         locationData.mapLink = mapLink.trim();
       }
     }
-    
+
     const payload = {
       name: name.trim(),
       description: description.trim(),
@@ -140,22 +158,27 @@ const EventPost = ({ darkMode, onBack }) => {
       location: locationData,
       date: {
         start: new Date(dateStart),
-        end: new Date(dateEnd)
+        end: new Date(dateEnd),
       },
       image: uploadedImage?.preview || null,
       comments: [],
-      likes: 0,
       createdAt: new Date(),
     };
 
-    setLoading(true);
-    
+    const token = localStorage.getItem("token");
+
     try {
-      console.log('Submitting event data:', payload);
-      // Simulate API call for demo
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      console.log("Submitting event data:", payload);
+      setLoading(true);
+
+      const { data } = await axios.post("/api/events", payload, {
+        headers: {
+          Authorization: `Bearer ${token}`, // if authentication is required
+        },
+      });
+
       setSuccess("Event created successfully!");
+
       setTimeout(() => {
         setName("");
         setDescription("");
@@ -174,18 +197,35 @@ const EventPost = ({ darkMode, onBack }) => {
         if (onBack) onBack();
       }, 2000);
     } catch (err) {
-      console.error('Error creating event:', err);
-      if (err.name === 'TypeError' && err.message.includes('fetch')) {
-        setError("Network error. Please check your internet connection and try again.");
-      } else if (err.message.includes('400')) {
-        setError("Invalid event data. Please check your inputs and try again.");
-      } else if (err.message.includes('401')) {
-        setError("Authentication required. Please log in and try again.");
-      } else if (err.message.includes('403')) {
-        setError("You don't have permission to create events.");
-      } else if (err.message.includes('500')) {
-        setError("Server error. Please try again later.");
+      console.error("Error creating event:", err);
+
+      if (err.response) {
+        // Server responded with error
+        switch (err.response.status) {
+          case 400:
+            setError(
+              "Invalid event data. Please check your inputs and try again."
+            );
+            break;
+          case 401:
+            setError("Authentication required. Please log in and try again.");
+            break;
+          case 403:
+            setError("You don't have permission to create events.");
+            break;
+          case 500:
+            setError("Server error. Please try again later.");
+            break;
+          default:
+            setError(err.response.data?.message || "Failed to create event.");
+        }
+      } else if (err.request) {
+        // Request was made but no response
+        setError(
+          "Network error. Please check your internet connection and try again."
+        );
       } else {
+        // Something else
         setError(err.message || "Failed to create event. Please try again.");
       }
     } finally {
@@ -194,30 +234,56 @@ const EventPost = ({ darkMode, onBack }) => {
   };
 
   const steps = [
-    { title: "Add Photo", description: "Upload an image for your event (optional)" },
-    { title: "Event Details", description: "Tell people about your event and who's hosting" },
-    { title: "Location & Time", description: "When and where your event will happen" }
+    {
+      title: "Add Photo",
+      description: "Upload an image for your event (optional)",
+    },
+    {
+      title: "Event Details",
+      description: "Tell people about your event and who's hosting",
+    },
+    {
+      title: "Location & Time",
+      description: "When and where your event will happen",
+    },
   ];
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} p-4 md:p-6`}>
+    <div
+      className={`min-h-screen ${
+        darkMode ? "bg-gray-900" : "bg-gray-50"
+      } p-4 md:p-6`}
+    >
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
           {activeStep > 0 && (
             <button
               onClick={handleBack}
-              className={`p-2 rounded-full ${darkMode ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-white text-gray-600 hover:bg-gray-100'} shadow-sm transition-colors`}
+              className={`p-2 rounded-full ${
+                darkMode
+                  ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                  : "bg-white text-gray-600 hover:bg-gray-100"
+              } shadow-sm transition-colors`}
             >
               <ArrowLeft size={20} />
             </button>
           )}
           <div className="flex-1">
-            <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+            <h2
+              className={`text-2xl font-bold ${
+                darkMode ? "text-white" : "text-gray-800"
+              }`}
+            >
               Create Event
             </h2>
-            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Step {activeStep + 1} of {steps.length}: {steps[activeStep].description}
+            <p
+              className={`text-sm ${
+                darkMode ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
+              Step {activeStep + 1} of {steps.length}:{" "}
+              {steps[activeStep].description}
             </p>
           </div>
         </div>
@@ -228,26 +294,43 @@ const EventPost = ({ darkMode, onBack }) => {
             {steps.map((step, index) => (
               <React.Fragment key={index}>
                 <div className="flex flex-col items-center">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 shadow-lg ${
-                    index === activeStep ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white ring-4 ring-blue-200 scale-110' :
-                    index < activeStep ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md' :
-                    darkMode ? 'bg-gray-700 text-gray-400 border-2 border-gray-600' : 'bg-gray-200 text-gray-600 border-2 border-gray-300'
-                  }`}>
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 shadow-lg ${
+                      index === activeStep
+                        ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white ring-4 ring-blue-200 scale-110"
+                        : index < activeStep
+                        ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md"
+                        : darkMode
+                        ? "bg-gray-700 text-gray-400 border-2 border-gray-600"
+                        : "bg-gray-200 text-gray-600 border-2 border-gray-300"
+                    }`}
+                  >
                     {index < activeStep ? <CheckCircle size={18} /> : index + 1}
                   </div>
-                  <p className={`text-xs mt-2 hidden md:block font-medium max-w-20 text-center transition-colors ${
-                    index === activeStep ? 'text-blue-600 font-semibold' :
-                    index < activeStep ? 'text-green-600' :
-                    darkMode ? 'text-gray-400' : 'text-gray-600'
-                  }`}>
+                  <p
+                    className={`text-xs mt-2 hidden md:block font-medium max-w-20 text-center transition-colors ${
+                      index === activeStep
+                        ? "text-blue-600 font-semibold"
+                        : index < activeStep
+                        ? "text-green-600"
+                        : darkMode
+                        ? "text-gray-400"
+                        : "text-gray-600"
+                    }`}
+                  >
                     {step.title}
                   </p>
                 </div>
                 {index < steps.length - 1 && (
-                  <div className={`w-20 h-2 mx-3 rounded-full transition-all duration-500 ${
-                    index < activeStep ? 'bg-gradient-to-r from-green-400 to-green-500 shadow-sm' :
-                    darkMode ? 'bg-gray-700' : 'bg-gray-300'
-                  }`}></div>
+                  <div
+                    className={`w-20 h-2 mx-3 rounded-full transition-all duration-500 ${
+                      index < activeStep
+                        ? "bg-gradient-to-r from-green-400 to-green-500 shadow-sm"
+                        : darkMode
+                        ? "bg-gray-700"
+                        : "bg-gray-300"
+                    }`}
+                  ></div>
                 )}
               </React.Fragment>
             ))}
@@ -255,12 +338,22 @@ const EventPost = ({ darkMode, onBack }) => {
         </div>
 
         {/* Main Form Container */}
-        <div className={`rounded-2xl overflow-hidden ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-xl border ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
+        <div
+          className={`rounded-2xl overflow-hidden ${
+            darkMode ? "bg-gray-800" : "bg-white"
+          } shadow-xl border ${
+            darkMode ? "border-gray-700" : "border-gray-100"
+          }`}
+        >
           <div className="p-6">
             <div className="flex flex-col">
               {activeStep === 0 ? (
                 <>
-                  <h3 className={`font-bold text-lg mb-6 ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>
+                  <h3
+                    className={`font-bold text-lg mb-6 ${
+                      darkMode ? "text-gray-300" : "text-gray-800"
+                    }`}
+                  >
                     Add Event Photo (Optional)
                   </h3>
                   <div className="mb-6">
@@ -270,9 +363,13 @@ const EventPost = ({ darkMode, onBack }) => {
                       onDrop={handleDrop}
                       onClick={() => fileInputRef.current?.click()}
                       className={`border-3 border-dashed rounded-2xl flex flex-col items-center justify-center p-12 cursor-pointer transition-all duration-300 ${
-                        isDragging ? 'border-blue-500 bg-blue-50 scale-105' :
-                        uploadedImage ? 'border-green-400 bg-green-50' :
-                        darkMode ? 'border-gray-600 hover:border-gray-500 hover:bg-gray-800' : 'border-gray-400 hover:border-blue-400 hover:bg-blue-50'
+                        isDragging
+                          ? "border-blue-500 bg-blue-50 scale-105"
+                          : uploadedImage
+                          ? "border-green-400 bg-green-50"
+                          : darkMode
+                          ? "border-gray-600 hover:border-gray-500 hover:bg-gray-800"
+                          : "border-gray-400 hover:border-blue-400 hover:bg-blue-50"
                       }`}
                     >
                       <input
@@ -284,18 +381,36 @@ const EventPost = ({ darkMode, onBack }) => {
                       />
                       {!uploadedImage ? (
                         <>
-                          <div className={`p-6 rounded-full mb-6 ${
-                            isDragging ? 'bg-blue-100 text-blue-600' :
-                            darkMode ? 'bg-gray-800 text-gray-400' : 'bg-white text-gray-500'
-                          } shadow-lg transition-all duration-300`}>
+                          <div
+                            className={`p-6 rounded-full mb-6 ${
+                              isDragging
+                                ? "bg-blue-100 text-blue-600"
+                                : darkMode
+                                ? "bg-gray-800 text-gray-400"
+                                : "bg-white text-gray-500"
+                            } shadow-lg transition-all duration-300`}
+                          >
                             <Upload size={48} />
                           </div>
-                          <p className={`font-bold text-xl mb-3 ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>
-                            {isDragging ? 'Drop your photo here!' : 'Upload Event Photo'}
+                          <p
+                            className={`font-bold text-xl mb-3 ${
+                              darkMode ? "text-gray-300" : "text-gray-800"
+                            }`}
+                          >
+                            {isDragging
+                              ? "Drop your photo here!"
+                              : "Upload Event Photo"}
                           </p>
-                          <p className={`text-base text-center ${darkMode ? 'text-gray-500' : 'text-gray-600'}`}>
-                            Drag & drop your image here or click to browse<br />
-                            <span className="text-sm font-medium text-blue-600 mt-2 block">Optional - you can skip this step</span>
+                          <p
+                            className={`text-base text-center ${
+                              darkMode ? "text-gray-500" : "text-gray-600"
+                            }`}
+                          >
+                            Drag & drop your image here or click to browse
+                            <br />
+                            <span className="text-sm font-medium text-blue-600 mt-2 block">
+                              Optional - you can skip this step
+                            </span>
                           </p>
                         </>
                       ) : (
@@ -320,8 +435,12 @@ const EventPost = ({ darkMode, onBack }) => {
                           <div className="p-4 rounded-full mb-4 bg-green-100 text-green-600 shadow-lg mx-auto w-fit">
                             <CheckCircle size={32} />
                           </div>
-                          <p className="font-bold text-green-600 mb-2">Photo Uploaded Successfully!</p>
-                          <p className="text-sm text-gray-600">Click anywhere to change image</p>
+                          <p className="font-bold text-green-600 mb-2">
+                            Photo Uploaded Successfully!
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Click anywhere to change image
+                          </p>
                         </div>
                       )}
                     </div>
@@ -339,22 +458,45 @@ const EventPost = ({ darkMode, onBack }) => {
                 </>
               ) : activeStep === 1 ? (
                 <>
-                  <h3 className={`font-bold text-lg mb-6 ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>
+                  <h3
+                    className={`font-bold text-lg mb-6 ${
+                      darkMode ? "text-gray-300" : "text-gray-800"
+                    }`}
+                  >
                     Event Details
                   </h3>
                   <div className="space-y-5 flex-1">
                     {/* Host/Organizer Name */}
                     <div>
-                      <label className={`block font-semibold mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
+                      <label
+                        className={`block font-semibold mb-2 ${
+                          darkMode ? "text-gray-400" : "text-gray-700"
+                        }`}
+                      >
                         Host/Organizer Name *
                       </label>
-                      <div className={`flex items-center px-4 py-3 rounded-xl border-2 ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}>
-                        <User size={18} className={darkMode ? 'text-gray-500' : 'text-gray-400'} />
+                      <div
+                        className={`flex items-center px-4 py-3 rounded-xl border-2 ${
+                          darkMode
+                            ? "bg-gray-700 border-gray-600"
+                            : "bg-white border-gray-300"
+                        }`}
+                      >
+                        <User
+                          size={18}
+                          className={
+                            darkMode ? "text-gray-500" : "text-gray-400"
+                          }
+                        />
                         <input
                           type="text"
                           value={hostName}
                           onChange={(e) => setHostName(e.target.value)}
-                          className={`flex-1 ml-2 bg-transparent outline-none ${darkMode ? 'text-white placeholder-gray-500' : 'text-gray-800 placeholder-gray-400'}`}
+                          className={`flex-1 ml-2 bg-transparent outline-none ${
+                            darkMode
+                              ? "text-white placeholder-gray-500"
+                              : "text-gray-800 placeholder-gray-400"
+                          }`}
                           placeholder="Who's organizing this event?"
                         />
                       </div>
@@ -362,7 +504,11 @@ const EventPost = ({ darkMode, onBack }) => {
 
                     {/* Event Name */}
                     <div>
-                      <label className={`block font-semibold mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
+                      <label
+                        className={`block font-semibold mb-2 ${
+                          darkMode ? "text-gray-400" : "text-gray-700"
+                        }`}
+                      >
                         Event Name *
                       </label>
                       <input
@@ -370,7 +516,9 @@ const EventPost = ({ darkMode, onBack }) => {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         className={`w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
-                          darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500 focus:border-blue-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400 focus:border-blue-400'
+                          darkMode
+                            ? "bg-gray-700 border-gray-600 text-white placeholder-gray-500 focus:border-blue-400"
+                            : "bg-white border-gray-300 text-gray-800 placeholder-gray-400 focus:border-blue-400"
                         }`}
                         placeholder="What's your event called?"
                       />
@@ -378,14 +526,20 @@ const EventPost = ({ darkMode, onBack }) => {
 
                     {/* Description */}
                     <div>
-                      <label className={`block font-semibold mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
+                      <label
+                        className={`block font-semibold mb-2 ${
+                          darkMode ? "text-gray-400" : "text-gray-700"
+                        }`}
+                      >
                         Description *
                       </label>
                       <textarea
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         className={`w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
-                          darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500 focus:border-blue-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400 focus:border-blue-400'
+                          darkMode
+                            ? "bg-gray-700 border-gray-600 text-white placeholder-gray-500 focus:border-blue-400"
+                            : "bg-white border-gray-300 text-gray-800 placeholder-gray-400 focus:border-blue-400"
                         }`}
                         placeholder="Tell people about your event..."
                         rows={4}
@@ -394,7 +548,11 @@ const EventPost = ({ darkMode, onBack }) => {
 
                     {/* Category */}
                     <div>
-                      <label className={`block font-semibold mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
+                      <label
+                        className={`block font-semibold mb-2 ${
+                          darkMode ? "text-gray-400" : "text-gray-700"
+                        }`}
+                      >
                         Category
                       </label>
                       <div className="grid grid-cols-3 gap-2">
@@ -404,8 +562,11 @@ const EventPost = ({ darkMode, onBack }) => {
                             type="button"
                             onClick={() => setCategory(cat)}
                             className={`py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                              category === cat ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md' :
-                              darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                              category === cat
+                                ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
+                                : darkMode
+                                ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                             }`}
                           >
                             {cat}
@@ -416,16 +577,35 @@ const EventPost = ({ darkMode, onBack }) => {
 
                     {/* Tags */}
                     <div>
-                      <label className={`block font-semibold mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
+                      <label
+                        className={`block font-semibold mb-2 ${
+                          darkMode ? "text-gray-400" : "text-gray-700"
+                        }`}
+                      >
                         Tags
                       </label>
-                      <div className={`flex items-center px-4 py-3 rounded-xl border-2 ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}>
-                        <Hash size={18} className={darkMode ? 'text-gray-500' : 'text-gray-400'} />
+                      <div
+                        className={`flex items-center px-4 py-3 rounded-xl border-2 ${
+                          darkMode
+                            ? "bg-gray-700 border-gray-600"
+                            : "bg-white border-gray-300"
+                        }`}
+                      >
+                        <Hash
+                          size={18}
+                          className={
+                            darkMode ? "text-gray-500" : "text-gray-400"
+                          }
+                        />
                         <input
                           type="text"
                           value={tags}
                           onChange={(e) => setTags(e.target.value)}
-                          className={`flex-1 ml-2 bg-transparent outline-none ${darkMode ? 'text-white placeholder-gray-500' : 'text-gray-800 placeholder-gray-400'}`}
+                          className={`flex-1 ml-2 bg-transparent outline-none ${
+                            darkMode
+                              ? "text-white placeholder-gray-500"
+                              : "text-gray-800 placeholder-gray-400"
+                          }`}
                           placeholder="tech, conference, networking (comma separated)"
                         />
                       </div>
@@ -437,7 +617,9 @@ const EventPost = ({ darkMode, onBack }) => {
                       type="button"
                       onClick={handleBack}
                       className={`flex-1 py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all font-medium ${
-                        darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        darkMode
+                          ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                       }`}
                     >
                       <ArrowLeft size={18} />
@@ -446,11 +628,13 @@ const EventPost = ({ darkMode, onBack }) => {
                     <button
                       type="button"
                       onClick={handleNext}
-                      disabled={!name.trim() || !description.trim() || !hostName.trim()}
+                      disabled={
+                        !name.trim() || !description.trim() || !hostName.trim()
+                      }
                       className={`flex-1 py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 font-bold ${
-                        name.trim() && description.trim() && hostName.trim() ? 
-                        'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5' : 
-                        'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        name.trim() && description.trim() && hostName.trim()
+                          ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
                       }`}
                     >
                       Next Step
@@ -460,13 +644,21 @@ const EventPost = ({ darkMode, onBack }) => {
                 </>
               ) : activeStep === 2 ? (
                 <>
-                  <h3 className={`font-bold text-lg mb-6 ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>
+                  <h3
+                    className={`font-bold text-lg mb-6 ${
+                      darkMode ? "text-gray-300" : "text-gray-800"
+                    }`}
+                  >
                     Location & Time
                   </h3>
                   <div className="space-y-5 flex-1">
                     {/* Location Type */}
                     <div>
-                      <label className={`block font-semibold mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
+                      <label
+                        className={`block font-semibold mb-2 ${
+                          darkMode ? "text-gray-400" : "text-gray-700"
+                        }`}
+                      >
                         Location Type
                       </label>
                       <div className="grid grid-cols-3 gap-2">
@@ -476,11 +668,18 @@ const EventPost = ({ darkMode, onBack }) => {
                             type="button"
                             onClick={() => setLocation(loc)}
                             className={`py-3 px-3 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center gap-1 ${
-                              location === loc ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md' :
-                              darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                              location === loc
+                                ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
+                                : darkMode
+                                ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                             }`}
                           >
-                            {loc === "Online" ? <Globe size={14} /> : <Building size={14} />}
+                            {loc === "Online" ? (
+                              <Globe size={14} />
+                            ) : (
+                              <Building size={14} />
+                            )}
                             {loc}
                           </button>
                         ))}
@@ -491,31 +690,69 @@ const EventPost = ({ darkMode, onBack }) => {
                     {location !== "Online" && (
                       <div className="space-y-4">
                         <div>
-                          <label className={`block font-semibold mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
+                          <label
+                            className={`block font-semibold mb-2 ${
+                              darkMode ? "text-gray-400" : "text-gray-700"
+                            }`}
+                          >
                             Venue Name *
                           </label>
-                          <div className={`flex items-center px-4 py-3 rounded-xl border-2 ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}>
-                            <MapPin size={18} className={darkMode ? 'text-gray-500' : 'text-gray-400'} />
+                          <div
+                            className={`flex items-center px-4 py-3 rounded-xl border-2 ${
+                              darkMode
+                                ? "bg-gray-700 border-gray-600"
+                                : "bg-white border-gray-300"
+                            }`}
+                          >
+                            <MapPin
+                              size={18}
+                              className={
+                                darkMode ? "text-gray-500" : "text-gray-400"
+                              }
+                            />
                             <input
                               type="text"
                               value={venue}
                               onChange={(e) => setVenue(e.target.value)}
-                              className={`flex-1 ml-2 bg-transparent outline-none ${darkMode ? 'text-white placeholder-gray-500' : 'text-gray-800 placeholder-gray-400'}`}
+                              className={`flex-1 ml-2 bg-transparent outline-none ${
+                                darkMode
+                                  ? "text-white placeholder-gray-500"
+                                  : "text-gray-800 placeholder-gray-400"
+                              }`}
                               placeholder="Enter venue name"
                             />
                           </div>
                         </div>
                         <div>
-                          <label className={`block font-semibold mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
+                          <label
+                            className={`block font-semibold mb-2 ${
+                              darkMode ? "text-gray-400" : "text-gray-700"
+                            }`}
+                          >
                             Google Maps Link (Optional)
                           </label>
-                          <div className={`flex items-center px-4 py-3 rounded-xl border-2 ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}>
-                            <ExternalLink size={18} className={darkMode ? 'text-gray-500' : 'text-gray-400'} />
+                          <div
+                            className={`flex items-center px-4 py-3 rounded-xl border-2 ${
+                              darkMode
+                                ? "bg-gray-700 border-gray-600"
+                                : "bg-white border-gray-300"
+                            }`}
+                          >
+                            <ExternalLink
+                              size={18}
+                              className={
+                                darkMode ? "text-gray-500" : "text-gray-400"
+                              }
+                            />
                             <input
                               type="url"
                               value={mapLink}
                               onChange={(e) => setMapLink(e.target.value)}
-                              className={`flex-1 ml-2 bg-transparent outline-none ${darkMode ? 'text-white placeholder-gray-500' : 'text-gray-800 placeholder-gray-400'}`}
+                              className={`flex-1 ml-2 bg-transparent outline-none ${
+                                darkMode
+                                  ? "text-white placeholder-gray-500"
+                                  : "text-gray-800 placeholder-gray-400"
+                              }`}
                               placeholder="https://maps.google.com/..."
                             />
                           </div>
@@ -526,16 +763,35 @@ const EventPost = ({ darkMode, onBack }) => {
                     {/* Meeting Link for Online Events */}
                     {location === "Online" && (
                       <div>
-                        <label className={`block font-semibold mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
+                        <label
+                          className={`block font-semibold mb-2 ${
+                            darkMode ? "text-gray-400" : "text-gray-700"
+                          }`}
+                        >
                           Meeting Link (Optional)
                         </label>
-                        <div className={`flex items-center px-4 py-3 rounded-xl border-2 ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}>
-                          <Globe size={18} className={darkMode ? 'text-gray-500' : 'text-gray-400'} />
+                        <div
+                          className={`flex items-center px-4 py-3 rounded-xl border-2 ${
+                            darkMode
+                              ? "bg-gray-700 border-gray-600"
+                              : "bg-white border-gray-300"
+                          }`}
+                        >
+                          <Globe
+                            size={18}
+                            className={
+                              darkMode ? "text-gray-500" : "text-gray-400"
+                            }
+                          />
                           <input
                             type="url"
                             value={meetingLink}
                             onChange={(e) => setMeetingLink(e.target.value)}
-                            className={`flex-1 ml-2 bg-transparent outline-none ${darkMode ? 'text-white placeholder-gray-500' : 'text-gray-800 placeholder-gray-400'}`}
+                            className={`flex-1 ml-2 bg-transparent outline-none ${
+                              darkMode
+                                ? "text-white placeholder-gray-500"
+                                : "text-gray-800 placeholder-gray-400"
+                            }`}
                             placeholder="Zoom, Teams, or other meeting link..."
                           />
                         </div>
@@ -545,30 +801,64 @@ const EventPost = ({ darkMode, onBack }) => {
                     {/* Date Picker Section */}
                     <div className="space-y-4">
                       <div>
-                        <label className={`block font-semibold mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
+                        <label
+                          className={`block font-semibold mb-2 ${
+                            darkMode ? "text-gray-400" : "text-gray-700"
+                          }`}
+                        >
                           Start Date & Time *
                         </label>
-                        <div className={`flex items-center px-4 py-3 rounded-xl border-2 ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}>
-                          <Calendar size={18} className={darkMode ? 'text-gray-500' : 'text-gray-400'} />
+                        <div
+                          className={`flex items-center px-4 py-3 rounded-xl border-2 ${
+                            darkMode
+                              ? "bg-gray-700 border-gray-600"
+                              : "bg-white border-gray-300"
+                          }`}
+                        >
+                          <Calendar
+                            size={18}
+                            className={
+                              darkMode ? "text-gray-500" : "text-gray-400"
+                            }
+                          />
                           <input
                             type="datetime-local"
                             value={dateStart}
                             onChange={(e) => setDateStart(e.target.value)}
-                            className={`flex-1 ml-2 bg-transparent outline-none ${darkMode ? 'text-white' : 'text-gray-800'}`}
+                            className={`flex-1 ml-2 bg-transparent outline-none ${
+                              darkMode ? "text-white" : "text-gray-800"
+                            }`}
                           />
                         </div>
                       </div>
                       <div>
-                        <label className={`block font-semibold mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
+                        <label
+                          className={`block font-semibold mb-2 ${
+                            darkMode ? "text-gray-400" : "text-gray-700"
+                          }`}
+                        >
                           End Date & Time *
                         </label>
-                        <div className={`flex items-center px-4 py-3 rounded-xl border-2 ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}>
-                          <Calendar size={18} className={darkMode ? 'text-gray-500' : 'text-gray-400'} />
+                        <div
+                          className={`flex items-center px-4 py-3 rounded-xl border-2 ${
+                            darkMode
+                              ? "bg-gray-700 border-gray-600"
+                              : "bg-white border-gray-300"
+                          }`}
+                        >
+                          <Calendar
+                            size={18}
+                            className={
+                              darkMode ? "text-gray-500" : "text-gray-400"
+                            }
+                          />
                           <input
                             type="datetime-local"
                             value={dateEnd}
                             onChange={(e) => setDateEnd(e.target.value)}
-                            className={`flex-1 ml-2 bg-transparent outline-none ${darkMode ? 'text-white' : 'text-gray-800'}`}
+                            className={`flex-1 ml-2 bg-transparent outline-none ${
+                              darkMode ? "text-white" : "text-gray-800"
+                            }`}
                           />
                         </div>
                       </div>
@@ -580,7 +870,9 @@ const EventPost = ({ darkMode, onBack }) => {
                       type="button"
                       onClick={handleBack}
                       className={`flex-1 py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all font-medium ${
-                        darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        darkMode
+                          ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                       }`}
                     >
                       <ArrowLeft size={18} />
@@ -589,14 +881,24 @@ const EventPost = ({ darkMode, onBack }) => {
                     <button
                       type="button"
                       onClick={handleSubmit}
-                      disabled={loading || !dateStart || !dateEnd || (location !== "Online" && !venue.trim())}
+                      disabled={
+                        loading ||
+                        !dateStart ||
+                        !dateEnd ||
+                        (location !== "Online" && !venue.trim())
+                      }
                       className={`flex-1 py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 font-bold ${
-                        !(loading || !dateStart || !dateEnd || (location !== "Online" && !venue.trim())) ? 
-                        'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5' : 
-                        'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        !(
+                          loading ||
+                          !dateStart ||
+                          !dateEnd ||
+                          (location !== "Online" && !venue.trim())
+                        )
+                          ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
                       }`}
                     >
-                      {loading ? 'Creating Event...' : 'Create Event'}
+                      {loading ? "Creating Event..." : "Create Event"}
                     </button>
                   </div>
                 </>
@@ -611,7 +913,7 @@ const EventPost = ({ darkMode, onBack }) => {
             {error}
           </div>
         )}
-        
+
         {success && (
           <div className="mt-6 p-4 rounded-xl bg-green-100 border border-green-300 text-green-700">
             {success}
