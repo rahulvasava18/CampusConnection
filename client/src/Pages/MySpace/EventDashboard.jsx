@@ -14,107 +14,141 @@ import {
   ChevronDown,
 } from "lucide-react";
 
+import { ChevronUp, Users } from "lucide-react";
+
 // Event Card Component matching Project Dashboard style
-const EventCard = ({ event, onEdit, onDelete }) => {
+const EventCard = ({ event }) => {
   const [showDetails, setShowDetails] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
+  const [isGoing, setIsGoing] = useState(false);
+  const [isUpvoted, setIsUpvoted] = useState(false);
 
   const startDate = new Date(event.date.start);
+  const endDate = new Date(event.date.end);
   const month = startDate.toLocaleString("default", { month: "short" });
   const day = startDate.getDate();
-  const time = startDate.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const formatTime = (date) =>
+    date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-  };
+  const handleGoing = () => setIsGoing(!isGoing);
+  const handleUpvote = () => setIsUpvoted(!isUpvoted);
 
   return (
-    <div className="relative p-4 rounded-2xl shadow-md bg-white hover:shadow-lg transition-shadow duration-300">
-      {/* Action buttons */}
-      <button
-        onClick={() => onDelete(event._id)}
-        className="absolute top-2 left-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full p-2"
-      >
-        ✕
-      </button>
-      <button
-        onClick={() => onEdit(event._id)}
-        className="absolute top-2 right-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-2"
-      >
-        ⬆
-      </button>
+    <div className="group w-full max-w-md sm:max-w-lg lg:max-w-xl mx-auto">
+      <div className="relative p-5 sm:p-6 md:p-6 rounded-3xl shadow-lg bg-gradient-to-br from-white via-gray-50 to-blue-50 hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 ease-out border border-gray-100/50 backdrop-blur-sm">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 via-purple-600/3 to-pink-600/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-      {/* Event content */}
-      <div className="flex">
-        {/* Date display */}
-        <div className="flex flex-col items-center justify-center w-16 h-16 bg-blue-100 text-blue-800 rounded-lg mr-4">
-          <span className="text-sm font-semibold">{month}</span>
-          <span className="text-xl font-bold">{day}</span>
-        </div>
+        <div className="flex flex-col sm:flex-row relative z-10">
+          {/* Date display */}
+          <div className="flex flex-col items-center justify-center w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 text-white rounded-2xl mb-4 sm:mb-0 sm:mr-6 shadow-lg shadow-blue-200/50 flex-shrink-0">
+            <span className="text-xs sm:text-sm font-bold opacity-90">
+              {month.toUpperCase()}
+            </span>
+            <span className="text-xl sm:text-2xl font-black">{day}</span>
+          </div>
 
-        <div className="flex-1">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="text-lg font-semibold text-gray-800">
+          <div className="flex-1 min-w-0">
+            {/* Title */}
+            <h3 className="text-lg sm:text-xl font-black text-gray-800 leading-tight pr-2 bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text mb-2 sm:mb-3 truncate">
               {event.name}
             </h3>
-            <button
-              onClick={handleLike}
-              className={`p-1 rounded-full ${
-                isLiked ? "text-red-500" : "text-gray-400"
-              }`}
-            >
-              <Heart size={18} fill={isLiked ? "currentColor" : "none"} />
-            </button>
-          </div>
 
-          <div className="flex items-center text-sm text-gray-600 mb-2">
-            <User size={14} className="mr-1" />
-            <span className="mr-3">{event.hostName}</span>
-            <MapPin size={14} className="mr-1" />
-            <span>{event.location?.venue}</span>
-          </div>
+            {/* Host & Venue */}
+            <div className="flex flex-col sm:flex-row sm:items-center text-xs sm:text-sm text-gray-600 mb-3 gap-2 sm:gap-4">
+              <div className="flex items-center">
+                <User size={14} className="mr-2 text-blue-500" />
+                <span className="font-semibold text-gray-700 truncate">
+                  {event.hostName}
+                </span>
+              </div>
+              <div className="flex items-center">
+                <MapPin size={14} className="mr-2 text-green-500" />
+                <span className="font-medium truncate">
+                  {event.location?.venue}
+                </span>
+              </div>
+            </div>
 
-          <div className="flex items-center text-sm text-gray-600 mb-3">
-            <Clock size={14} className="mr-1" />
-            <span>{time}</span>
-          </div>
+            {/* Time */}
+            <div className="flex flex-col sm:flex-row sm:items-center text-xs sm:text-sm text-gray-600 mb-4 gap-2 sm:gap-4">
+              <div className="flex items-center">
+                <Clock size={14} className="mr-2 text-purple-500" />
+                <span className="font-semibold">
+                  {formatTime(startDate)} - {formatTime(endDate)}
+                </span>
+              </div>
+              <div className="flex items-center">
+                <Calendar size={14} className="mr-2 text-blue-500" />
+                <span className="font-medium">
+                  {startDate.toLocaleDateString()} -{" "}
+                  {endDate.toLocaleDateString()}
+                </span>
+              </div>
+            </div>
 
-          <p className="text-gray-600 text-sm mb-3">{event.description}</p>
+            {/* Description */}
+            <p className="text-gray-600 text-xs sm:text-sm mb-4 leading-relaxed font-medium line-clamp-4">
+              {event.description}
+            </p>
 
-          <div className="flex flex-wrap gap-2 mb-3">
-            {event.tags.slice(0, 3).map((tag, index) => (
-              <span
-                key={index}
-                className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full"
+            {/* Tags */}
+            <div className="flex flex-wrap gap-1 sm:gap-2 mb-3 text-[10px] sm:text-xs">
+              {event.tags.slice(0, 3).map((tag, idx) => (
+                <span
+                  key={idx}
+                  className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-gradient-to-r from-blue-100 via-blue-50 to-purple-100 text-blue-700 font-semibold rounded-full border border-blue-200/50 shadow-sm"
+                >
+                  #{tag}
+                </span>
+              ))}
+              {event.tags.length > 3 && (
+                <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-gray-100 text-gray-600 font-semibold rounded-full border border-gray-200/50">
+                  +{event.tags.length - 3} more
+                </span>
+              )}
+            </div>
+
+            {/* Upvote & Going buttons */}
+            <div className="flex flex-wrap gap-2 sm:gap-3 mb-4 text-xs sm:text-sm">
+              <button
+                onClick={handleUpvote}
+                className={`flex items-center gap-1 px-3 sm:px-4 py-1 sm:py-2 rounded-full font-medium transition-all duration-300 ${
+                  isUpvoted
+                    ? "bg-gradient-to-r from-orange-400 to-red-500 text-white shadow-lg shadow-orange-200"
+                    : "bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 hover:text-orange-600 shadow-md"
+                }`}
               >
-                {tag}
-              </span>
-            ))}
-            {event.tags.length > 3 && (
-              <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                +{event.tags.length - 3}
-              </span>
-            )}
-          </div>
+                <ChevronUp size={14} /> Upvote
+              </button>
 
-          <div className="flex justify-between items-center">
-            <div className="flex items-center text-sm text-gray-500">
-              <span className="mr-3">
+              <button
+                onClick={handleGoing}
+                className={`flex items-center gap-1 px-3 sm:px-4 py-1 sm:py-2 rounded-full font-medium transition-all duration-300 ${
+                  isGoing
+                    ? "bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-lg shadow-green-200"
+                    : "bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 hover:text-green-600 shadow-md"
+                }`}
+              >
+                <Users size={14} /> Going
+              </button>
+            </div>
+
+            {/* Stats */}
+            <div className="flex justify-between items-center pt-2 border-t border-gray-200/50 text-xs sm:text-sm text-gray-500">
+              <span className="flex items-center gap-1 font-medium">
+                <Heart size={12} className="text-red-400" />
                 {event.engagement?.interestedCount || 0} interested
               </span>
-              <span>{event.engagement?.goingCount || 0} going</span>
+              <span className="flex items-center gap-1 font-medium">
+                <Users size={12} className="text-green-500" />
+                {event.engagement?.goingCount || 0} going
+              </span>
             </div>
-          
           </div>
         </div>
       </div>
     </div>
   );
 };
-
 // Main Event Dashboard Component
 // ... imports stay the same
 
@@ -206,7 +240,7 @@ const EventDashboard = () => {
     };
     fetchEvents();
   }, []);
-  
+
   const userId = localStorage.getItem("userId");
 
   const currentUserId = userId; // TODO: Replace with logged-in userId from auth
