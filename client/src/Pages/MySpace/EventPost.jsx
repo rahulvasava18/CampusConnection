@@ -33,7 +33,7 @@ const EventPost = ({ darkMode, onBack }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [uploadedImage, setUploadedImage] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
-  
+
   const fileInputRef = useRef(null);
 
   const categories = [
@@ -165,17 +165,29 @@ const EventPost = ({ darkMode, onBack }) => {
       createdAt: new Date(),
     };
 
+    // Build FormData
+    const formData = new FormData();
+    formData.append("event", JSON.stringify(payload));
+
+    // If user selected an image file, append it. uploadedImage.file from handleFiles
+    if (uploadedImage?.file) {
+      formData.append("image", uploadedImage.file);
+    }
     const token = localStorage.getItem("token");
 
     try {
-      console.log("Submitting event data:", payload);
       setLoading(true);
 
-      const { data } = await axios.post("/api/events", payload, {
-        headers: {
-          Authorization: `Bearer ${token}`, // if authentication is required
-        },
-      });
+      const { data } = await axios.post(
+        "http://localhost:3000/api/event/createEvent/",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // if authentication is required
+          },
+          timeout: 10000,
+        }
+      );
 
       setSuccess("Event created successfully!");
 
@@ -198,6 +210,9 @@ const EventPost = ({ darkMode, onBack }) => {
       }, 2000);
     } catch (err) {
       console.error("Error creating event:", err);
+      if (err.code === "ECONNABORTED") {
+        setError("Request timed out. Please try again.");
+      }
 
       if (err.response) {
         // Server responded with error
