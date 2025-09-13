@@ -1,3 +1,6 @@
+import mongoose from "mongoose";
+import commentSchema  from "./CommentSchema.js";
+
 const eventSchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: { type: String, required: true },
@@ -49,7 +52,14 @@ const eventSchema = new mongoose.Schema({
   },
 
   // Event Photo
-  image: { type: String }, // frontend uploads as preview/base64/url
+  image: {
+    url: { type: String },
+    public_id: { type: String },
+    format: { type: String },
+    width: { type: Number },
+    height: { type: Number },
+  },
+
 
   // Comments (uses commentSchema if defined separately)
   comments: [commentSchema],

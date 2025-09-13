@@ -27,7 +27,7 @@ app.use("/api/auth/", authRouter);
 app.use("/api/user/", protect, userRouter);
 app.use("/api/post/", protect, postRouter);
 app.use("/api/feed/", protect, feedRouter);
-app.use("/api/events/", protect, eventRouter);
+app.use("/api/event/", protect, eventRouter);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
