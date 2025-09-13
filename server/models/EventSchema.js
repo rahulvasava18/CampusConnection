@@ -5,7 +5,6 @@ const eventSchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: { type: String, required: true },
 
-  // Category list merged from frontend & backend
   category: {
     type: String,
     enum: [
@@ -25,15 +24,12 @@ const eventSchema = new mongoose.Schema({
 
   tags: [String],
 
-  // Matches frontend "hostName"
   hostName: { type: String },
 
-  // CreatedBy from token/user context
   createdBy: {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
 
-  // Location fields matched with frontend
   location: {
     type: {
       type: String,
@@ -60,11 +56,9 @@ const eventSchema = new mongoose.Schema({
     height: { type: Number },
   },
 
-
-  // Comments (uses commentSchema if defined separately)
   comments: [commentSchema],
 
-  // Attendees
+
   attendees: [
     {
       userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

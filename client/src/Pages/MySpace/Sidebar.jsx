@@ -19,8 +19,6 @@ const Sidebar = ({ user }) => {
     navigate("/login");
   };
 
-  
-
   // Button styling with hover + active effects
   const navItemClass = ({ isActive }) =>
     `flex items-center space-x-3 px-3 py-2 rounded-lg font-bold text-base transition-transform duration-200 
@@ -64,7 +62,7 @@ const Sidebar = ({ user }) => {
         <NavLink to="/projects/myproject" className={navItemClass}>
           <FaProjectDiagram /> <span>Projects</span>
         </NavLink>
-        <NavLink to="/events/upcoming" className={navItemClass}>
+        <NavLink to="/events/all" className={navItemClass}>
           <FaMusic /> <span>Events</span>
         </NavLink>
         <NavLink to="/message" className={navItemClass}>

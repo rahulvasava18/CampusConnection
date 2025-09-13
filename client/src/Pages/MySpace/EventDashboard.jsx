@@ -1,7 +1,18 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { useNavigate, Routes, Route } from "react-router-dom";
 import EventPost from "./EventPost";
-import { Search, Filter, Calendar, MapPin, User, Clock, Heart, Share, ChevronDown } from "lucide-react";
+import {
+  Search,
+  Filter,
+  Calendar,
+  MapPin,
+  User,
+  Clock,
+  Heart,
+  Share,
+  ChevronDown,
+} from "lucide-react";
 
 // Event Card Component matching Project Dashboard style
 const EventCard = ({ event, onEdit, onDelete }) => {
@@ -46,10 +57,14 @@ const EventCard = ({ event, onEdit, onDelete }) => {
 
         <div className="flex-1">
           <div className="flex justify-between items-start mb-2">
-            <h3 className="text-lg font-semibold text-gray-800">{event.name}</h3>
+            <h3 className="text-lg font-semibold text-gray-800">
+              {event.name}
+            </h3>
             <button
               onClick={handleLike}
-              className={`p-1 rounded-full ${isLiked ? "text-red-500" : "text-gray-400"}`}
+              className={`p-1 rounded-full ${
+                isLiked ? "text-red-500" : "text-gray-400"
+              }`}
             >
               <Heart size={18} fill={isLiked ? "currentColor" : "none"} />
             </button>
@@ -57,7 +72,7 @@ const EventCard = ({ event, onEdit, onDelete }) => {
 
           <div className="flex items-center text-sm text-gray-600 mb-2">
             <User size={14} className="mr-1" />
-            <span className="mr-3">{event.organizer?.name}</span>
+            <span className="mr-3">{event.hostName}</span>
             <MapPin size={14} className="mr-1" />
             <span>{event.location?.venue}</span>
           </div>
@@ -92,30 +107,8 @@ const EventCard = ({ event, onEdit, onDelete }) => {
               </span>
               <span>{event.engagement?.goingCount || 0} going</span>
             </div>
-            <button
-              onClick={() => setShowDetails(!showDetails)}
-              className="flex items-center text-blue-600 text-sm"
-            >
-              {showDetails ? "Less details" : "More details"}
-              <ChevronDown size={16} className={`ml-1 transform ${showDetails ? "rotate-180" : ""}`} />
-            </button>
+          
           </div>
-
-          {showDetails && (
-            <div className="mt-3 pt-3 border-t border-gray-200">
-              <h4 className="font-medium text-gray-800 mb-2">Event Schedule:</h4>
-              <ul className="text-sm text-gray-600 space-y-1">
-                {event.timeline && event.timeline.slice(0, 3).map((item, index) => (
-                  <li key={index}>
-                    {new Date(item.time).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })} - {item.activity}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
       </div>
     </div>
@@ -123,89 +116,147 @@ const EventCard = ({ event, onEdit, onDelete }) => {
 };
 
 // Main Event Dashboard Component
+// ... imports stay the same
+
 const EventDashboard = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("upcoming");
+  const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all"); // NEW: all, upcoming, completed
   const [sortBy, setSortBy] = useState("recent");
 
-  // Dummy Events data
-  const [upcomingEvents] = useState([
+  const [allEvents, setAllEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const dummyEvents = [
     {
       _id: "1",
-      name: "Tech Conference 2025",
-      description: "An annual gathering of tech enthusiasts and professionals. Join us for a day of inspiring talks, workshops, and networking opportunities with industry leaders.",
-      category: "Academic",
-      tags: ["Technology", "Innovation", "AI", "Machine Learning", "Networking"],
-      organizer: { name: "John Doe" },
-      location: { type: "On-campus", venue: "Auditorium A" },
-      date: { start: "2025-09-15T10:00:00", end: "2025-09-15T17:00:00" },
-      engagement: { upvotes: 45, interestedCount: 120, goingCount: 80 },
-      timeline: [
-        {
-          activity: "Keynote Speech",
-          speaker: "Elon Musk",
-          time: "2025-09-15T10:00:00",
-        },
-        {
-          activity: "AI Workshop",
-          speaker: "Andrew Ng",
-          time: "2025-09-15T12:00:00",
-        },
-      ],
+      name: "React Workshop",
+      description: "Learn the basics of React with hands-on coding.",
+      category: "Workshop",
+      tags: ["React", "Frontend", "JS"],
+      location: { venue: "Hall A", mapLink: "" },
+      date: {
+        start: new Date("2025-09-20T10:00:00"),
+        end: new Date("2025-09-20T14:00:00"),
+      },
+      engagement: { interestedCount: 25, goingCount: 10 },
+      createdBy: "123", // matches currentUserId
     },
     {
       _id: "2",
-      name: "AI Meetup",
-      description: "Networking session for AI researchers and developers. Share your projects, learn from others, and connect with like-minded individuals in the AI community.",
-      category: "Workshop",
-      tags: ["AI", "Machine Learning", "Deep Learning", "Neural Networks"],
-      organizer: { name: "Jane Smith" },
-      location: { type: "Online", meetingLink: "https://zoom.ai" },
-      date: { start: "2025-10-05T14:00:00", end: "2025-10-05T16:00:00" },
-      engagement: { upvotes: 32, interestedCount: 85, goingCount: 60 },
+      name: "Hackathon 2025",
+      description: "48 hours of building amazing projects with your team.",
+      category: "Hackathon",
+      tags: ["Coding", "Teams", "Innovation"],
+      location: { venue: "Tech Park", mapLink: "" },
+      date: {
+        start: new Date("2025-10-05T09:00:00"),
+        end: new Date("2025-10-07T18:00:00"),
+      },
+      engagement: { interestedCount: 50, goingCount: 20 },
+      createdBy: "999",
     },
     {
       _id: "3",
-      name: "Blockchain Summit",
-      description: "Exploring the future of blockchain technology and cryptocurrencies. Hear from industry experts about the latest developments and opportunities in the space.",
-      category: "Conference",
-      tags: ["Blockchain", "Crypto", "Web3", "DeFi"],
-      organizer: { name: "Crypto Association" },
-      location: { type: "On-campus", venue: "Convention Center" },
-      date: { start: "2025-11-20T09:00:00", end: "2025-11-21T18:00:00" },
-      engagement: { upvotes: 78, interestedCount: 210, goingCount: 145 },
-    },
-  ]);
-
-  const [myEvents] = useState([
-    {
-      _id: "4",
-      name: "My Birthday Party",
-      description: "Celebration with friends, food, and fun! Join me for an evening of music, games, and great conversations.",
+      name: "Social Meetup",
+      description: "Networking and fun activities for students.",
       category: "Social",
-      tags: ["Party", "Friends", "Birthday", "Celebration"],
-      organizer: { name: "Me" },
-      location: { type: "On-campus", venue: "Community Hall" },
-      date: { start: "2025-11-01T18:00:00", end: "2025-11-01T23:00:00" },
-      engagement: { upvotes: 15, interestedCount: 40, goingCount: 25 },
+      tags: ["Friends", "Meetup"],
+      location: { venue: "Café Lounge", mapLink: "" },
+      date: {
+        start: new Date("2025-08-10T17:00:00"),
+        end: new Date("2025-08-10T20:00:00"),
+      },
+      engagement: { interestedCount: 15, goingCount: 5 },
+      createdBy: "456",
     },
-    {
-      _id: "5",
-      name: "Hackathon Hosting",
-      description: "24-hour coding competition with exciting prizes. Teams will work together to build innovative solutions to real-world problems. Food and drinks provided!",
-      category: "Hackathon",
-      tags: ["Coding", "Teamwork", "Programming", "Innovation"],
-      organizer: { name: "Me" },
-      location: { type: "On-campus", venue: "Lab 101" },
-      date: { start: "2025-12-12T09:00:00", end: "2025-12-13T09:00:00" },
-      engagement: { upvotes: 60, interestedCount: 200, goingCount: 150 },
-    },
-  ]);
+  ];
 
+  // Fetch events
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const token = localStorage.getItem("token"); // or from context
+
+        const { data } = await axios.get(
+          "http://localhost:3000/api/event/all",
+          {
+            timeout: 1000,
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        console.log("Events data fetched:", data);
+
+        if (!data || (Array.isArray(data) && data.length === 0)) {
+          console.log("No events data received from API. Using dummy data...");
+          setAllEvents(dummyEvents);
+        } else {
+          setAllEvents(Array.isArray(data) ? data : []);
+        }
+      } catch (error) {
+        console.error("Error fetching events:", error.message);
+        setAllEvents(dummyEvents); // fallback to dummy data on error
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEvents();
+  }, []);
+  
+  const userId = localStorage.getItem("userId");
+
+  const currentUserId = userId; // TODO: Replace with logged-in userId from auth
+
+  // ===== Filters =====
+  const filteredEvents = (events) => {
+    return events
+      .filter((event) => {
+        const matchesSearch =
+          event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          event.description.toLowerCase().includes(searchQuery.toLowerCase());
+
+        const matchesCategory =
+          categoryFilter === "all" || event.category === categoryFilter;
+
+        const now = new Date();
+        let matchesStatus = true;
+        if (statusFilter === "upcoming") {
+          matchesStatus = new Date(event.date.start) > now;
+        } else if (statusFilter === "completed") {
+          matchesStatus = new Date(event.date.end) < now;
+        }
+
+        return matchesSearch && matchesCategory && matchesStatus;
+      })
+      .sort((a, b) => {
+        if (sortBy === "recent") {
+          return new Date(b.date.start) - new Date(a.date.start);
+        } else if (sortBy === "popular") {
+          return (
+            (b.engagement?.goingCount || 0) +
+            (b.engagement?.interestedCount || 0) -
+            ((a.engagement?.goingCount || 0) +
+              (a.engagement?.interestedCount || 0))
+          );
+        } else if (sortBy === "date") {
+          return new Date(a.date.start) - new Date(b.date.start);
+        }
+        return 0;
+      });
+  };
+
+  // My Events (filter by createdBy field)
+  const myEvents = allEvents.filter(
+    (event) => event.createdBy?.userId === currentUserId
+  );
+
+  // ===== Tabs =====
   const tabs = [
-    { key: "upcoming", label: "Upcoming Events", path: "/events/upcoming" },
+    { key: "all", label: "All Events", path: "/events/all" },
     { key: "myevent", label: "My Events", path: "/events/myevent" },
     { key: "create", label: "Create Event", path: "/events/create" },
   ];
@@ -218,71 +269,28 @@ const EventDashboard = () => {
     "Hackathon",
     "Conference",
   ];
-
   const sortOptions = [
     { value: "recent", label: "Most Recent" },
     { value: "popular", label: "Most Popular" },
     { value: "date", label: "Date" },
   ];
 
-  const handleTabClick = (tabKey, path) => {
-    setActiveTab(tabKey);
-    navigate(path);
-  };
-
-  const handleDeleteEvent = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this event?")) return;
-    // Delete logic would go here
-    console.log("Deleting event:", id);
-  };
-
-  const handleEditEvent = (id) => {
-    navigate(`/events/edit/${id}`);
-  };
-
-  const filteredEvents = (events) => {
-    return events
-      .filter((event) => {
-        const matchesSearch =
-          event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          event.description.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesCategory =
-          categoryFilter === "all" || event.category === categoryFilter;
-        return matchesSearch && matchesCategory;
-      })
-      .sort((a, b) => {
-        if (sortBy === "recent") {
-          return new Date(b.date.start) - new Date(a.date.start);
-        } else if (sortBy === "popular") {
-          return (
-            b.engagement.goingCount +
-            b.engagement.interestedCount -
-            (a.engagement.goingCount + a.engagement.interestedCount)
-          );
-        } else if (sortBy === "date") {
-          return new Date(a.date.start) - new Date(b.date.start);
-        }
-        return 0;
-      });
-  };
-
   return (
     <div className="min-h-screen max-w-6xl mx-auto bg-indigo-100 p-4 md:p-8">
-        {/* <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800">Events Dashboard</h1>
-            <p className="text-gray-600">Manage and organize your events</p>
-          </div>
-          
-        </header> */}
-      <div className=" bg-white  max-w-6xl mx-auto p-8 rounded-2xl shadow">
-        <h1 className="text-3xl font-bold text-gray-800 justify-between items-start md:items-center mb-4 gap-4">Event Dashboard</h1>
-        {/* Toggle Buttons */}
+      <div className="bg-white max-w-6xl mx-auto p-8 rounded-2xl shadow">
+        <h1 className="text-3xl font-bold text-gray-800 mb-4">
+          Event Dashboard
+        </h1>
+
+        {/* Tabs */}
         <div className="flex gap-4 mb-6">
           {tabs.map((tab) => (
             <button
               key={tab.key}
-              onClick={() => handleTabClick(tab.key, tab.path)}
+              onClick={() => {
+                setActiveTab(tab.key);
+                navigate(tab.path);
+              }}
               className={`px-6 py-2 rounded-full font-medium transition ${
                 activeTab === tab.key
                   ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
@@ -294,8 +302,9 @@ const EventDashboard = () => {
           ))}
         </div>
 
-        {/* Search and Filter Section */}
+        {/* Search + Filters */}
         <div className="flex flex-col md:flex-row gap-4 mb-6">
+          {/* Search */}
           <div className="relative flex-1">
             <input
               type="text"
@@ -308,87 +317,92 @@ const EventDashboard = () => {
               <Search size={18} />
             </div>
           </div>
-          <div className="flex gap-2">
-            <div className="relative">
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="pl-3 pr-8 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
-              >
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category === "all" ? "All Categories" : category}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-2 top-2.5 text-gray-400 pointer-events-none">
-                <Filter size={18} />
-              </div>
+
+          {/* Category Filter */}
+          <div className="relative">
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="pl-3 pr-8 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+            >
+              {categories.map((category) => (
+                <option key={category} value={category}>
+                  {category === "all" ? "All Categories" : category}
+                </option>
+              ))}
+            </select>
+            <div className="absolute right-2 top-2.5 text-gray-400 pointer-events-none">
+              <Filter size={18} />
             </div>
-            <div className="relative">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="pl-3 pr-8 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
-              >
-                {sortOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-2 top-2.5 text-gray-400 pointer-events-none">
-                <ChevronDown size={18} />
-              </div>
+          </div>
+
+          {/* Status Filter */}
+          <div className="relative">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="pl-3 pr-8 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+            >
+              <option value="all">All Events</option>
+              <option value="upcoming">Upcoming Events</option>
+              <option value="completed">Completed Events</option>
+            </select>
+            <div className="absolute right-2 top-2.5 text-gray-400 pointer-events-none">
+              <Calendar size={18} />
+            </div>
+          </div>
+
+          {/* Sort By */}
+          <div className="relative">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="pl-3 pr-8 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+            >
+              {sortOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <div className="absolute right-2 top-2.5 text-gray-400 pointer-events-none">
+              <ChevronDown size={18} />
             </div>
           </div>
         </div>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-blue-50 p-4 rounded-lg shadow">
-            <p className="text-2xl font-bold text-gray-800">{upcomingEvents.length + myEvents.length}</p>
-            <p className="text-sm text-gray-600">Total Events</p>
-          </div>
-          <div className="bg-green-50 p-4 rounded-lg shadow">
-            <p className="text-2xl font-bold text-gray-800">{upcomingEvents.length}</p>
-            <p className="text-sm text-gray-600">Upcoming</p>
-          </div>
-          <div className="bg-yellow-50 p-4 rounded-lg shadow">
-            <p className="text-2xl font-bold text-gray-800">{myEvents.length}</p>
-            <p className="text-sm text-gray-600">My Events</p>
-          </div>
-          <div className="bg-red-50 p-4 rounded-lg shadow">
-            <p className="text-2xl font-bold text-gray-800">
-              {upcomingEvents.filter(e => new Date(e.date.start) < new Date()).length}
-            </p>
-            <p className="text-sm text-gray-600">Completed</p>
-          </div>
-        </div>
-
-        {/* Routes inside Dashboard */}
+        {/* Routes */}
         <Routes>
-          {/* Upcoming Events */}
+          {/* All Events */}
           <Route
-            path="/upcoming"
+            path="/all"
             element={
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {filteredEvents(upcomingEvents).length > 0 ? (
-                  filteredEvents(upcomingEvents).map((event) => (
+              loading ? (
+                <p>Loading events...</p>
+              ) : filteredEvents(allEvents).length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {filteredEvents(allEvents).map((event) => (
                     <EventCard
                       key={event._id}
                       event={event}
-                      onEdit={handleEditEvent}
-                      onDelete={handleDeleteEvent}
+                      onEdit={(id) => navigate(`/events/edit/${id}`)}
+                      onDelete={async (id) => {
+                        if (window.confirm("Delete this event?")) {
+                          await axios.delete(`/api/events/${id}`);
+                          setAllEvents((prev) =>
+                            prev.filter((event) => event._id !== id)
+                          );
+                        }
+                      }}
                     />
-                  ))
-                ) : (
-                  <div className="col-span-full text-center py-8">
-                    <Calendar size={48} className="mx-auto text-gray-400 mb-4" />
-                    <p className="text-gray-600">No upcoming events found.</p>
-                  </div>
-                )}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="col-span-full text-center py-8">
+                  <Calendar size={48} className="mx-auto text-gray-400 mb-4" />
+                  <p className="text-gray-600">No events found.</p>
+                </div>
+              )
             }
           />
 
@@ -396,23 +410,34 @@ const EventDashboard = () => {
           <Route
             path="/myevent"
             element={
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {filteredEvents(myEvents).length > 0 ? (
-                  filteredEvents(myEvents).map((event) => (
+              loading ? (
+                <p>Loading events...</p>
+              ) : filteredEvents(myEvents).length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {filteredEvents(myEvents).map((event) => (
                     <EventCard
                       key={event._id}
                       event={event}
-                      onEdit={handleEditEvent}
-                      onDelete={handleDeleteEvent}
+                      onEdit={(id) => navigate(`/events/edit/${id}`)}
+                      onDelete={async (id) => {
+                        if (window.confirm("Delete this event?")) {
+                          await axios.delete(`/api/events/${id}`);
+                          setAllEvents((prev) =>
+                            prev.filter((event) => event._id !== id)
+                          );
+                        }
+                      }}
                     />
-                  ))
-                ) : (
-                  <div className="col-span-full text-center py-8">
-                    <Calendar size={48} className="mx-auto text-gray-400 mb-4" />
-                    <p className="text-gray-600">You haven't created any events yet.</p>
-                  </div>
-                )}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="col-span-full text-center py-8">
+                  <Calendar size={48} className="mx-auto text-gray-400 mb-4" />
+                  <p className="text-gray-600">
+                    You haven’t created any events yet.
+                  </p>
+                </div>
+              )
             }
           />
 

@@ -3,6 +3,26 @@ const Event = EventSchema;
 import cloudinary from '../config/cloudinary.js';
 import streamifier from 'streamifier';
 
+// Get all events
+export const GetAllEvents = async (req, res) => {
+  try { 
+    const events = await Event.find()
+      .populate('comments.user', 'name')
+      .populate('attendees.userId', 'name')
+      .sort({ createdAt: -1 }); // latest first
+
+    if (!events || events.length === 0) {
+      return res.status(404).json({ message: 'No events found' });
+    }
+
+    res.status(200).json(events);
+  } catch (error) {
+    console.error("Error fetching events:", error);
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+
 export const CreateEvent = async (req, res) => {
   try {
     // If frontend sends a JSON string in `event` field:
@@ -21,9 +41,9 @@ export const CreateEvent = async (req, res) => {
       if (eventData.date.start) eventData.date.start = new Date(eventData.date.start);
       if (eventData.date.end) eventData.date.end = new Date(eventData.date.end);
     }
-
+    
     // Attach creator if auth middleware set req.user_id
-    if (req.user_id) {
+    if (req.user) {
       eventData.createdBy = { userId: req.user_id };
     }
     
@@ -127,14 +147,5 @@ export const AddComment = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: "Server error", error });
     }               
-}
-
-export const GetAllEvents = async (req, res) => {
-  try {
-    const events = await Event.find().populate('comments.user', 'name').populate('attendees.userId', 'name');
-    res.status(200).json(events);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
-  }
 }
 
