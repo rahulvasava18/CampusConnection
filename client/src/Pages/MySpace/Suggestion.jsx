@@ -110,7 +110,7 @@ export default function SuggestionBar() {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg w-fit max-h-[750px] overflow-hidden flex flex-col">
+    <div className=" bg-white rounded-xl shadow-lg w-fit max-h-[750px] overflow-hidden flex flex-col">
       {/* Header */}
       <div className="p-4 border-b border-gray-100">
         <h2 className="text-xl font-bold text-gray-800">Search</h2>
@@ -124,7 +124,7 @@ export default function SuggestionBar() {
             type="text"
             value={query}
             onChange={handleSearchChange}
-            placeholder="Search people, events, topics..."
+            placeholder="Search people "
             className="w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
           {query && (
@@ -212,10 +212,6 @@ export default function SuggestionBar() {
 
         {!query && !loading && !error && (
           <div className="p-4">
-            {/* Recent Searches */}
-            
-
-           
             {/* Suggestions for You */}
             <div>
               <h3 className="font-semibold text-gray-700 flex items-center gap-2 mb-3">

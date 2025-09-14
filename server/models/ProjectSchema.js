@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import commentSchema  from "./CommentSchema.js";
 
 const projectSchema = new mongoose.Schema({
   user: { 
@@ -21,7 +22,7 @@ const projectSchema = new mongoose.Schema({
   techStack: [{ 
     type: String,
     trim: true,
-  }], // e.g. ["React", "Node.js", "MongoDB"]
+  }],
 
   repoLink: { 
     type: String,
@@ -32,18 +33,30 @@ const projectSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+
   category: { 
     type: String,
   },
 
-  status: { 
-    type: String,
+  tags: {
+    type: [String],
+    default: [],
   },
 
-   tags: {
-      type: [String],
-      default: [],
-    },
+  image: {
+    url: { type: String, default: '' },
+    public_id: { type: String, default: '' },
+    format: { type: String, default: '' },
+    width: { type: Number },
+    height: { type: Number }
+  },
+
+  upvotes:{
+    type: Number,
+    default: 0
+  }, // Users who upvoted
+
+  comments: [commentSchema],
 
   createdAt: { 
     type: Date, 
@@ -54,9 +67,9 @@ const projectSchema = new mongoose.Schema({
     type: Date, 
     default: Date.now 
   },
-},
-{
-  timestamps: true // Automatically manages createdAt and updatedAt fields
+
+}, {
+  timestamps: true // automatically manage createdAt and updatedAt
 });
 
 export default mongoose.model('Project', projectSchema);

@@ -50,8 +50,7 @@ export default function EventCard({
   const [userData, setUserData] = useState({
     username: "rahul",
     fullName: "Rahul Vasava",
-    profilePicture:
-      "https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg",
+    profilePicture: "https://randomuser.me/api/portraits/men/32.jpg",
   });
 
   const [showComments, setShowComments] = useState(false);
@@ -169,15 +168,28 @@ export default function EventCard({
 
       {/* Minimized Gradient Header */}
       <div className="relative h-20 bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 overflow-hidden">
+        {/* Overlay */}
         <div className="absolute inset-0 bg-black/10"></div>
-        <div className="absolute inset-4 flex items-center justify-between">
-          <h2 className="text-white font-bold text-xl leading-tight drop-shadow-sm">
-            {name}
-          </h2>
+
+        {/* Header content */}
+        <div className="absolute inset-4 flex justify-between items-center">
+          {/* Name + Organizer */}
+          <div className="flex flex-col">
+            <h2 className="text-white font-bold text-xl leading-tight drop-shadow-sm">
+              {name}
+            </h2>
+            <div className="flex items-center text-white text-sm mt-1">
+              <User className="w-4 h-4 mr-2" />
+              <span className="font-medium">Organized by {hostName}</span>
+            </div>
+          </div>
+
+          {/* Category badge */}
           <span className="bg-white/20 backdrop-blur-sm text-white text-xs font-medium px-3 py-1 rounded-full border border-white/30">
             {category}
           </span>
         </div>
+
         {/* Decorative circles */}
         <div className="absolute -top-4 -right-4 w-16 h-16 bg-white/10 rounded-full"></div>
         <div className="absolute -bottom-2 -left-2 w-10 h-10 bg-white/10 rounded-full"></div>
@@ -185,13 +197,6 @@ export default function EventCard({
 
       {/* Content */}
       <div className="p-6 space-y-4">
-
-        {/* Organizer */}
-        <div className="flex items-center text-gray-700 text-sm">
-          <User className="w-4 h-4 mr-2" />
-          <span className="font-medium">Organized by {hostName}</span>
-        </div>
-
         {/* Date & Time */}
         <div className="flex items-center justify-between bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-4 border border-gray-100">
           <div className="flex items-center space-x-3">
@@ -264,8 +269,6 @@ export default function EventCard({
             </div>
           </div>
         </div>
-
-        
       </div>
 
       {/* Action Buttons */}
@@ -312,22 +315,31 @@ export default function EventCard({
             </div>
           </div>
 
-          <button
-            onClick={() => setShowComments(!showComments)}
-            className="flex items-center justify-center w-10 h-10 rounded-full text-gray-600 hover:bg-gray-200 transition-all duration-200 transform active:scale-95"
-          >
-            <MessageCircle className="w-5 h-5" />
-          </button>
-          <span className="text-sm font-medium text-gray-700">
-            {comments.length}
-          </span>
+          <div className="flex items-center">
+            <button
+              onClick={() => setShowComments(!showComments)}
+              className="flex items-center justify-center w-10 h-10 rounded-full text-gray-600 hover:bg-gray-200 transition-all duration-200 transform active:scale-95"
+            >
+              <MessageCircle className="w-5 h-5" />
+            </button>
+
+            <div className="flex flex-col items-center leading-tight">
+              <span className="text-sm font-medium text-gray-700">
+                {" "}
+                {comments.length}
+              </span>
+              <span className="text-[10px] uppercase tracking-wide">
+                {" "}
+                comments{" "}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="px-6 py-2 space-y-4">
         {/* Description */}
         {description && (
-
           <p className="text-gray-700 text-sm leading-relaxed line-clamp-3">
             {description}
           </p>
@@ -350,16 +362,16 @@ export default function EventCard({
         )}
       </div>
 
-       {/* Stats */}
-        <div className="flex items-center justify-between text-sm text-gray-600  px-6 py-2">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center">
-              <Users className="w-4 h-4 mr-1" />
-              <span className="font-medium">{attendees} attending</span>
-            </div>
+      {/* Stats */}
+      <div className="flex items-center justify-between text-sm text-gray-600  px-6 py-2">
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center">
+            <Users className="w-4 h-4 mr-1" />
+            <span className="font-medium">{attendees} attending</span>
           </div>
-          <div className="text-xs text-gray-400">{formatDate(createdAt)}</div>
         </div>
+        <div className="text-xs text-gray-400">{formatDate(createdAt)}</div>
+      </div>
 
       {/* Comments Section */}
       {showComments && (

@@ -1,224 +1,301 @@
-import { useState } from "react";
-import { FaHeart, FaRegHeart, FaComment, FaGithub } from "react-icons/fa";
+import React, { useState } from "react";
+import { 
+  Heart, 
+  MessageCircle, 
+  ExternalLink, 
+  Github, 
+  Calendar, 
+  Tag, 
+  Eye, 
+  ArrowUpRight,
+  User,
+  Code,
+  Image as ImageIcon,
+  Clock,
+  Database,
+  Camera
+} from "lucide-react";
 
-export default function ProjectCard({
-  user,
-  title,
-  description,
-  techStack = [],
-  repoLink,
-  tags = [],
-  createdAt,
-  likes = 0,
-  comments = [],
-}) {
-  const [showComments, setShowComments] = useState(false);
-  const [newComment, setNewComment] = useState("");
-  const [likeCount, setLikeCount] = useState(likes);
-  const [liked, setLiked] = useState(false);
+import { FaEllipsisH } from "react-icons/fa";
 
-  const toggleLike = () => {
-    setLiked(!liked);
-    setLikeCount(liked ? likeCount - 1 : likeCount + 1);
+const ProjectCard = ({ project }) => {
+  const [isLiked, setIsLiked] = useState(false);
+  const [upvotes, setUpvotes] = useState(project?.upvotes || 0);
+
+  const handleUpvote = () => {
+    setIsLiked(!isLiked);
+    setUpvotes((prev) => (isLiked ? prev - 1 : prev + 1));
+  };
+
+  // User data state
+  const [user, setUser] = useState({
+    username: "rahul",
+    fullName: "Rahul Vasava",
+    profilePicture:
+      "https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg",
+  });
+
+  const formatDate = (date) => {
+    if (!date) return "Unknown date";
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "Invalid date";
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }).format(d);
+  };
+
+  const formatFullDate = (date) => {
+    if (!date) return "Unknown";
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "Invalid date";
+    return d.toLocaleString();
+  };
+
+  const getTechStackColor = (tech) => {
+    const colors = {
+      React: "from-blue-500 to-cyan-400",
+      "Node.js": "from-green-500 to-emerald-400",
+      Python: "from-yellow-500 to-orange-400",
+      TensorFlow: "from-orange-500 to-red-400",
+      MongoDB: "from-green-600 to-teal-500",
+      JavaScript: "from-yellow-400 to-orange-500",
+      TypeScript: "from-blue-600 to-blue-400",
+      Vue: "from-green-400 to-teal-500",
+      Angular: "from-red-500 to-pink-500",
+      Express: "from-gray-600 to-gray-400",
+    };
+    return colors[tech] || "from-gray-500 to-gray-400";
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg mb-6 max-w-2xl mx-auto overflow-hidden border border-gray-100">
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 shadow-sm bg-gray-50">
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-0.5 rounded-full">
-                  <img
-                    src={user.avatar || "https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg"}
-                    alt="avatar"
-                    className="w-10 h-10 rounded-full border-2 border-white"
-                  />
-                </div>
+    <div className="max-w-2xl mb-6 mx-auto bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 overflow-hidden group border border-gray-100">
+      
+     {/* Header */}
+           <div className="flex items-center justify-between px-4 py-3 shadow-sm bg-gray-50">
+             <div className="flex items-center gap-3">
+               <div className="relative">
+                 <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-0.5 rounded-full">
+                   <img
+                     src={
+                       user.avatar ||
+                       "https://randomuser.me/api/portraits/men/32.jpg"
+                     }
+                     alt="avatar"
+                     className="w-10 h-10 rounded-full border-2 border-white"
+                   />
+                 </div>
+               </div>
+               <div>
+                 <h4 className="font-semibold text-gray-900 text-sm">
+                   {user.fullName || "Full Name"}
+                 </h4>
+                 <p className="text-xs text-gray-500">@{user.username}</p>
+               </div>
+             </div>
+     
+             <div className="flex items-center gap-2">
+               <button className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1.5 rounded-full font-medium hover:opacity-90 transition">
+                 View Profile
+               </button>
+               {/* <button className="text-gray-500 hover:text-gray-700">
+                 <FaEllipsisH />
+               </button> */}
+             </div>
+           </div>
+
+      {/* Project Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
+        
+        {/* Left Column - Image and Basic Info */}
+        <div className="space-y-4">
+          {/* Project Image */}
+          <div className="relative overflow-hidden h-64 rounded-2xl">
+            <img
+              src={project?.image?.url || "https://via.placeholder.com/600x300/f3f4f6/9ca3af?text=No+Image"}
+              alt={project?.title || "Project Image"}
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+            {/* Category Badge */}
+            {project?.category && (
+              <div className="absolute top-4 left-4">
+                <span className="px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-semibold text-gray-800 shadow-lg">
+                  {project.category}
+                </span>
               </div>
-              <div>
-                <h4 className="font-semibold text-gray-900 text-sm">{user.name || "Full Name"}</h4>
-                <p className="text-xs text-gray-500">@{user.username}</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <button className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1.5 rounded-full font-medium hover:opacity-90 transition">
-                View Profile
-              </button>
-              <button className="text-gray-500 hover:text-gray-700">
-                <FaEllipsisH />
-              </button>
+            )}
+
+            {/* Quick Actions */}
+            <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+              {project?.liveLink && (
+                <a
+                  href={project.liveLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors duration-200 shadow-lg hover:shadow-xl"
+                  title="View Live Demo"
+                >
+                  <ExternalLink size={16} className="text-gray-700" />
+                </a>
+              )}
+              {project?.repoLink && (
+                <a
+                  href={project.repoLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors duration-200 shadow-lg hover:shadow-xl"
+                  title="View Source Code"
+                >
+                  <Github size={16} className="text-gray-700" />
+                </a>
+              )}
             </div>
           </div>
-           
-           <div className="border-t border-gray-200"></div>
-          {/* Content */}
-          {title && (
-            <div className="w-full bg-gray-50 flex flex-col items-center justify-center">
-              {title
-                .split('\n')
-                .filter(line => line.trim() !== '')
-                .map((line, idx) => (
-                  <p key={idx} className="px-4 py-2 text-gray-800 text-md  w-full">
-                    {line}
-                  </p>
-                )
+
+          
+
+          {/* Project Links */}
+          {(project?.repoLink || project?.liveLink) && (
+            <div className="flex gap-3">
+              {project?.repoLink && (
+                <a
+                  href={project.repoLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-sm font-medium transition-all duration-200 hover:shadow-lg hover:scale-105"
+                >
+                  <Github size={16} />
+                  Source Code
+                </a>
+              )}
+              {project?.liveLink && (
+                <a
+                  href={project.liveLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-medium transition-all duration-200 hover:shadow-lg hover:scale-105"
+                >
+                  <ExternalLink size={16} />
+                  Live Demo
+                </a>
               )}
             </div>
           )}
-           
-          {description && (
-            <div className="w-full bg-gray-50 flex flex-col items-center justify-center">
-              {description  
-                .split('\n')
-                .filter(line => line.trim() !== '') 
-                .map((line, idx) => (
-                  <p key={idx} className="px-4 py-2 text-gray-800 text-md  w-full">
-                    {line}  
-                  </p>
-                ))
-              }
-            </div>  
-          )};
-    
-          {/* Action buttons */}
-          <div className="flex items-center justify-between px-4 py-3">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={toggleLike}
-                className="flex items-center gap-1 transition-transform hover:scale-110"
-              >
-                {liked ? (
-                  <FaHeart className="text-red-500 text-xl" />
-                ) : (
-                  <FaRegHeart className="text-xl text-gray-800" />
-                )}
-              </button>
-              <button
-                onClick={() => setShowComments(!showComments)}
-                className="flex items-center gap-1 transition-transform hover:scale-110"
-              >
-                <FaComment className="text-xl text-gray-800" />
-              </button>
-              <button className="flex items-center gap-1 transition-transform hover:scale-110">
-                <FiSend className="text-xl text-gray-800" />
-              </button>
-            </div>
-            <button
-              onClick={toggleSave}
-              className="transition-transform hover:scale-110"
-            >
-              {saved ? (
-                <FaBookmark className="text-yellow-500 text-xl" />
-              ) : (
-                <FaRegBookmark className="text-xl text-gray-800" />
-              )}
-            </button>
+        </div>
+
+        {/* Right Column - Project Details */}
+        <div className="space-y-5">
+          {/* Project Title and Description */}
+          <div>
+            <h3 className="font-bold text-2xl text-gray-900 mb-3 group-hover:text-blue-600 transition-colors duration-200">
+              {project?.title || "Untitled Project"}
+            </h3>
+            <p className="text-gray-600 text-sm leading-relaxed">
+              {project?.description || "No description provided for this project."}
+            </p>
           </div>
-    
-          {/* Likes */}
-          <div className="px-4 text-sm font-semibold text-gray-800 mb-1">
-            {likeCount} {likeCount === 1 ? 'like' : 'likes'}
-          </div>
-    
-          {/* Caption */}
-          <div className="px-4 py-1 text-sm">
-            <span className="font-bold mr-2">{user.username}</span>
-            {/* <span className="text-gray-800">{caption}</span> */}
-            <span className="text-gray-800">{repoLink}</span>
-            {tags.length > 0 && (
-              <div className="mt-1 flex flex-wrap gap-1">
-                {tags.map((hash, idx) => (
+
+          {/* Tech Stack */}
+          {Array.isArray(project?.techStack) && project.techStack.length > 0 && (
+            <div>
+              <h5 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                <Code size={16} />
+                Tech Stack
+              </h5>
+              <div className="flex flex-wrap gap-2">
+                {project.techStack.map((tech, index) => (
                   <span
-                    key={idx}
-                    className="text-blue-500 hover:text-blue-700 cursor-pointer text-sm"
+                    key={index}
+                    className={`px-3 py-2 rounded-xl text-sm font-medium text-white bg-gradient-to-r ${getTechStackColor(
+                      tech
+                    )} shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105`}
                   >
-                    #{hash}
+                    {tech}
                   </span>
                 ))}
               </div>
-            )}
-          </div>
-    
-          {/* Tags */}
-          {techStack.length > 0 && (
-            <div className="px-4 py-2 flex flex-wrap gap-2">
-              {techStack.map((tech, idx) => (
-                <span
-                  key={idx}
-                  className="text-xs bg-gradient-to-r from-blue-50 to-purple-50 text-blue-600 px-2.5 py-1 rounded-full border border-blue-100"
-                >
-                  {tech}
-                </span>
-              ))}
             </div>
           )}
-    
-          {/* View comments */}
-          {comments.length > 0 && !showComments && (
-            <button 
-              onClick={() => setShowComments(true)}
-              className="px-4 text-sm text-gray-500 mb-2 hover:text-gray-700"
-            >
-              View all {comments.length} {comments.length === 1 ? 'comment' : 'comments'}
-            </button>
-          )}
-    
-          {/* Comments Section */}
-          {showComments && (
-            <div className="px-4 pt-2 pb-3 bg-gray-50 border-t border-gray-100">
-              {comments.length > 0 ? (
-                <ul className="space-y-3 mb-3 max-h-60 overflow-y-auto py-1">
-                  {comments.map((c, idx) => (
-                    <li key={idx} className="text-sm flex items-start">
-                      <div className="bg-gradient-to-r from-blue-100 to-purple-100 p-1 rounded-full mr-2">
-                        <img
-                          src="https://via.placeholder.com/24"
-                          alt="avatar"
-                          className="w-6 h-6 rounded-full"
-                        />
-                      </div>
-                      <div className="bg-white px-3 py-2 rounded-2xl flex-1 shadow-sm">
-                        <span className="font-semibold mr-2">{c.user}</span>
-                        <span>{c.text}</span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-gray-500 mb-3 text-center py-2">No comments yet.</p>
-              )}
-    
-              {/* Add comment */}
-              <div className="flex items-center gap-2 pt-1">
-                <div className="flex-1 relative">
-                  <input
-                    type="text"
-                    placeholder="Add a comment..."
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    className="w-full border border-gray-300 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-                  />
-                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-                    <button 
-                      onClick={handleAddComment}
-                      disabled={!newComment.trim()}
-                      className={`p-1 rounded-full ${newComment.trim() ? 'text-blue-500 hover:text-blue-700' : 'text-gray-300'}`}
-                    >
-                      <FaPaperPlane />
-                    </button>
-                  </div>
-                </div>
+
+          {/* Tags */}
+          {Array.isArray(project?.tags) && project.tags.length > 0 && (
+            <div>
+              <h5 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                <Tag size={16} />
+                Tags
+              </h5>
+              <div className="flex flex-wrap gap-2">
+                {project.tags.map((tag, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center gap-1 px-3 py-2 bg-blue-50 text-blue-700 rounded-xl text-sm font-medium hover:bg-blue-100 transition-colors duration-200"
+                  >
+                    <Tag size={12} />
+                    {tag}
+                  </span>
+                ))}
               </div>
             </div>
           )}
-    
-          {/* Timestamp */}
-          <div className="px-4 py-2 text-xs text-gray-400 uppercase tracking-wide border-t border-gray-100">
-            {new Date(createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+
+          {/* Project Metadata */}
+          <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200">
+            <h5 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+              <Database size={16} />
+              Project Metadata
+            </h5>
+            <div className="grid grid-cols-1 gap-3 text-sm">
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {project?.createdAt && (
+                  <div>
+                    <span className="text-gray-600">Created:</span>
+                    <div className="text-gray-800 font-medium">{formatFullDate(project.createdAt)}</div>
+                  </div>
+                )}
+                {project?.updatedAt && (
+                  <div>
+                    <span className="text-gray-600">Updated:</span>
+                    <div className="text-gray-800 font-medium">{formatFullDate(project.updatedAt)}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Stats and Actions */}
+          <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleUpvote}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 ${
+                  isLiked
+                    ? "bg-red-50 text-red-600 hover:bg-red-100"
+                    : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                <ArrowUpRight
+                  size={16}
+                  className={`transition-all duration-200 ${
+                    isLiked ? "fill-current scale-110" : ""
+                  }`}
+                />
+                {upvotes} Upvotes
+              </button>
+
+              <div className="flex items-center gap-2 text-gray-500 text-sm">
+                <MessageCircle size={16} />
+                {Array.isArray(project?.comments) ? project.comments.length : 0} Comments
+              </div>
+            </div>
           </div>
         </div>
+      </div>
+    </div>
   );
-}
+};
+
+export default ProjectCard;

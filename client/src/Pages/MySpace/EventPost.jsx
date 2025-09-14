@@ -10,8 +10,10 @@ import {
   ArrowLeft,
   ArrowRight,
   CheckCircle,
+  Check,
   User,
   ExternalLink,
+  Edit3,
 } from "lucide-react";
 import axios from "axios";
 
@@ -30,7 +32,7 @@ const EventPost = ({ darkMode, onBack }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const [activeStep, setActiveStep] = useState(0);
+  const [activeStep, setActiveStep] = useState(1);
   const [uploadedImage, setUploadedImage] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -86,13 +88,10 @@ const EventPost = ({ darkMode, onBack }) => {
 
   const handleNext = () => {
     if (activeStep === 1) {
-      if (!name.trim() || !description.trim() || !hostName.trim()) {
-        setError("Event name, description, and host name are required");
-        return;
-      }
+      setActiveStep(2);
+    } else if (activeStep === 2) {
+      setActiveStep(3);
     }
-    setError(null);
-    setActiveStep((prev) => prev + 1);
   };
 
   const handleBack = () => {
@@ -249,108 +248,69 @@ const EventPost = ({ darkMode, onBack }) => {
   };
 
   const steps = [
-    {
-      title: "Add Photo",
-      description: "Upload an image for your event (optional)",
-    },
-    {
-      title: "Event Details",
-      description: "Tell people about your event and who's hosting",
-    },
-    {
-      title: "Location & Time",
-      description: "When and where your event will happen",
-    },
+    { number: 1, title: "Add Photo", icon: Upload },
+    { number: 2, title: "Event Details", icon: Edit3 },
+    { number: 3, title: "Location & Time", icon: MapPin },
   ];
+
+  const StepIndicator = () => (
+    <div className="flex items-center justify-center mb-8 overflow-x-auto">
+      {steps.map((step, index) => (
+        <React.Fragment key={step.number}>
+          <div
+            className={`flex items-center space-x-3 ${
+              step.number === activeStep
+                ? "text-blue-600"
+                : step.number < activeStep
+                ? "text-green-500"
+                : "text-gray-400"
+            }`}
+          >
+            <div
+              className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
+                step.number === activeStep
+                  ? "border-blue-600 bg-blue-50"
+                  : step.number < activeStep
+                  ? "border-green-500 bg-green-50"
+                  : "border-gray-300 bg-gray-50"
+              }`}
+            >
+              {step.number < activeStep ? (
+                <Check className="w-4 h-4" />
+              ) : (
+                <step.icon className="w-4 h-4" />
+              )}
+            </div>
+            <div className="hidden sm:block">
+              <p className="text-sm font-medium whitespace-nowrap">
+                {step.title}
+              </p>
+            </div>
+          </div>
+          {index < steps.length - 1 && (
+            <div
+              className={`h-0.5 w-12 mx-4 transition-all duration-300 ${
+                step.number < activeStep ? "bg-green-500" : "bg-gray-200"
+              }`}
+            />
+          )}
+        </React.Fragment>
+      ))}
+    </div>
+  );
 
   return (
     <div
       className={`min-h-screen ${
-        darkMode ? "bg-gray-900" : "bg-gray-50"
+        darkMode ? "bg-gray-900" : "bg-white"
       } p-4 md:p-6`}
     >
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
-          {activeStep > 0 && (
-            <button
-              onClick={handleBack}
-              className={`p-2 rounded-full ${
-                darkMode
-                  ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                  : "bg-white text-gray-600 hover:bg-gray-100"
-              } shadow-sm transition-colors`}
-            >
-              <ArrowLeft size={20} />
-            </button>
-          )}
-          <div className="flex-1">
-            <h2
-              className={`text-2xl font-bold ${
-                darkMode ? "text-white" : "text-gray-800"
-              }`}
-            >
-              Create Event
-            </h2>
-            <p
-              className={`text-sm ${
-                darkMode ? "text-gray-400" : "text-gray-600"
-              }`}
-            >
-              Step {activeStep + 1} of {steps.length}:{" "}
-              {steps[activeStep].description}
-            </p>
-          </div>
-        </div>
+        <h2 className="text-3xl font-bold mb-8 text-center bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+          Create Your Event
+        </h2>
 
-        {/* Progress Steps */}
-        <div className="flex justify-center mb-8">
-          <div className="flex items-center">
-            {steps.map((step, index) => (
-              <React.Fragment key={index}>
-                <div className="flex flex-col items-center">
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 shadow-lg ${
-                      index === activeStep
-                        ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white ring-4 ring-blue-200 scale-110"
-                        : index < activeStep
-                        ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md"
-                        : darkMode
-                        ? "bg-gray-700 text-gray-400 border-2 border-gray-600"
-                        : "bg-gray-200 text-gray-600 border-2 border-gray-300"
-                    }`}
-                  >
-                    {index < activeStep ? <CheckCircle size={18} /> : index + 1}
-                  </div>
-                  <p
-                    className={`text-xs mt-2 hidden md:block font-medium max-w-20 text-center transition-colors ${
-                      index === activeStep
-                        ? "text-blue-600 font-semibold"
-                        : index < activeStep
-                        ? "text-green-600"
-                        : darkMode
-                        ? "text-gray-400"
-                        : "text-gray-600"
-                    }`}
-                  >
-                    {step.title}
-                  </p>
-                </div>
-                {index < steps.length - 1 && (
-                  <div
-                    className={`w-20 h-2 mx-3 rounded-full transition-all duration-500 ${
-                      index < activeStep
-                        ? "bg-gradient-to-r from-green-400 to-green-500 shadow-sm"
-                        : darkMode
-                        ? "bg-gray-700"
-                        : "bg-gray-300"
-                    }`}
-                  ></div>
-                )}
-              </React.Fragment>
-            ))}
-          </div>
-        </div>
+        <StepIndicator />
 
         {/* Main Form Container */}
         <div
@@ -362,7 +322,7 @@ const EventPost = ({ darkMode, onBack }) => {
         >
           <div className="p-6">
             <div className="flex flex-col">
-              {activeStep === 0 ? (
+              {activeStep === 1 ? (
                 <>
                   <h3
                     className={`font-bold text-lg mb-6 ${
@@ -471,7 +431,7 @@ const EventPost = ({ darkMode, onBack }) => {
                     </button>
                   </div>
                 </>
-              ) : activeStep === 1 ? (
+              ) : activeStep === 2 ? (
                 <>
                   <h3
                     className={`font-bold text-lg mb-6 ${
@@ -657,7 +617,7 @@ const EventPost = ({ darkMode, onBack }) => {
                     </button>
                   </div>
                 </>
-              ) : activeStep === 2 ? (
+              ) : activeStep === 3 ? (
                 <>
                   <h3
                     className={`font-bold text-lg mb-6 ${
@@ -921,14 +881,12 @@ const EventPost = ({ darkMode, onBack }) => {
             </div>
           </div>
         </div>
-
         {/* Error and Success Messages */}
         {error && (
           <div className="mt-6 p-4 rounded-xl bg-red-100 border border-red-300 text-red-700">
             {error}
           </div>
         )}
-
         {success && (
           <div className="mt-6 p-4 rounded-xl bg-green-100 border border-green-300 text-green-700">
             {success}

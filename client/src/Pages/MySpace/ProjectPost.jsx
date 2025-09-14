@@ -15,12 +15,13 @@ import {
   Star,
   Calendar,
   Settings,
+  Upload,
+  CheckCircle,
 } from "lucide-react";
 
 import axios from "axios";
 
 const ProjectPost = () => {
-  // Form state
   const [currentStep, setCurrentStep] = useState(1);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -28,21 +29,69 @@ const ProjectPost = () => {
   const [repoLink, setRepoLink] = useState("");
   const [liveLink, setLiveLink] = useState("");
   const [tags, setTags] = useState("");
-  const [category, setCategory] = useState("web-app");
+  const [category, setCategory] = useState("web appplication");
   const [status, setStatus] = useState("completed");
-  const [images, setImages] = useState([]);
+  const [images, setImages] = useState([]); // multiple images
+  const [uploadedImage, setUploadedImage] = useState(null); // single preview
+  const [isDragging, setIsDragging] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
-
   const steps = [
     { number: 1, title: "Project Details", icon: Code },
-    { number: 2, title: "Project Links", icon: CloudUpload },
+    { number: 2, title: "Category & Links", icon: CloudUpload },
     { number: 3, title: "Settings & Tags", icon: Settings },
     { number: 4, title: "Preview & Publish", icon: Eye },
   ];
 
+  const fileInputRef = useRef(null);
+
+  // 🔹 Drag & Drop Handlers
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files);
+    handleFiles(files);
+  };
+
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files);
+    handleFiles(files);
+  };
+
+  const handleFiles = (files) => {
+    const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+    if (imageFiles.length === 0) return;
+
+    // support multiple uploads
+    const newImages = imageFiles.map((file) => ({
+      file,
+      preview: URL.createObjectURL(file),
+    }));
+
+    setImages((prev) => [...prev, ...newImages]);
+    setUploadedImage(newImages[0]); // for preview
+  };
+
+  const removeImage = (index) => {
+    const updated = [...images];
+    URL.revokeObjectURL(updated[index].preview);
+    updated.splice(index, 1);
+    setImages(updated);
+    if (index === 0) setUploadedImage(null);
+  };
+  // 🔹 Step Navigation
   const nextStep = () => {
     if (currentStep === 1) {
       if (!title.trim() || !description.trim()) {
@@ -52,10 +101,8 @@ const ProjectPost = () => {
       setError(null);
       setCurrentStep(2);
     } else if (currentStep === 2) {
-      // Optional validation for step 2
       setCurrentStep(3);
     } else if (currentStep === 3) {
-      // Optional validation for step 3
       setCurrentStep(4);
     }
   };
@@ -67,15 +114,16 @@ const ProjectPost = () => {
     }
   };
 
-;
-const handleSubmit = async (e) => {
-    e.preventDefault();  
+  // 🔹 Submit Handler
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setLoading(true);
     setError(null);
     setSuccess(null);
 
     if (!title.trim() || !description.trim()) {
       setError("Title and Description are required.");
+      setLoading(false);
       return;
     }
 
@@ -88,46 +136,55 @@ const handleSubmit = async (e) => {
       .split(",")
       .map((tech) => tech.trim())
       .filter((tech) => tech.length > 0);
-
+ 
+    const userId = localStorage.getItem("userId");  
+    
     const formData = new FormData();
+    formData.append("user", userId);
     formData.append("title", title);
     formData.append("description", description);
     formData.append("repoLink", repoLink);
     formData.append("liveLink", liveLink);
     formData.append("category", category);
     formData.append("status", status);
+
     tagsArray.forEach((tag) => formData.append("tags[]", tag));
     techArray.forEach((tech) => formData.append("techStack[]", tech));
-  
-    try{
-    const response = await axios.post("/api/projects", { timeout: 5000 } );
+    images.forEach((img) => formData.append("image", img.file));
 
-    if (response.status === 201 || response.status === 200) {
-      setSuccess("Project created successfully!");
-      // Reset form
-      setTitle("");
-      setDescription("");
-      setTechStack("");
-      setRepoLink("");
-      setLiveLink("");
-      setTags("");
-      setCategory("web-app");
-      setStatus("completed");
-      setImages([]);
-      setCurrentStep(1);
-    }
-  } catch (err) {
-    if (err.code === "ECONNRESET") {
-      console.warn("Connection reset, retrying...");
-      return fetchData();
-    }
-    console.error(err);
-    setError("Failed to create project");
-  } finally {
-    setLoading(false);
-  }
-};
+    const token = localStorage.getItem("token");
 
+    try {
+      const response = await axios.post("http://localhost:3000/api/project/createProject/", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data" 
+        },
+        timeout: 10000,
+      });
+
+      if (response.status === 201 || response.status === 200) {
+        setSuccess("Project created successfully!");
+        // Reset form
+        setTitle("");
+        setDescription("");
+        setTechStack("");
+        setRepoLink("");
+        setLiveLink("");
+        setTags("");
+        setCategory("web application");
+        setStatus("completed");
+        setImages([]);
+        setUploadedImage(null);
+        setCurrentStep(1);
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Failed to create project");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const StepIndicator = () => (
     <div className="flex items-center justify-center mb-8 overflow-x-auto">
@@ -250,9 +307,58 @@ const handleSubmit = async (e) => {
 
             {currentStep === 2 && (
               <div className="space-y-6 animate-in slide-in-from-right duration-300">
-                <h3 className="text-xl font-semibold text-gray-800 mb-6">
-                  Repo & Live Links
-                </h3>
+                {/* Category */}
+                <div className="w-full sm:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Project category
+                    </label>
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
+                    >
+                      <option value="web-app">Web Application</option>
+                      <option value="mobile-app">Mobile Application</option>
+                      <option value="desktop-app">Desktop Application</option>
+                      <option value="api">API/Backend</option>
+                      <option value="game">Game</option>
+                      <option value="ai-ml">AI/Machine Learning</option>
+                      <option value="blockchain">Blockchain</option>
+                      <option value="iot">IoT/Embedded Systems</option>
+                      <option value="cloud">Cloud/DevOps</option>
+                      <option value="cybersecurity">
+                        Cybersecurity/Privacy
+                      </option>
+                      <option value="ar-vr">
+                        AR/VR (Augmented/Virtual Reality)
+                      </option>
+                      <option value="data-science">
+                        Data Science/Analytics
+                      </option>
+                      <option value="automation">Automation/Scripting</option>
+                      <option value="cms">CMS/Website Builder</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Tags */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Project Tags
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
+                    placeholder="portfolio, fullstack, responsive, open-source (comma separated)"
+                    value={tags}
+                    onChange={(e) => setTags(e.target.value)}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Add relevant tags to help others discover your project
+                  </p>
+                </div>
 
                 {/* Repository Link */}
                 <div>
@@ -292,78 +398,81 @@ const handleSubmit = async (e) => {
 
             {currentStep === 3 && (
               <div className="space-y-6 animate-in slide-in-from-right duration-300">
-                <h3 className="text-xl font-semibold text-gray-800 mb-6">
-                  Project Settings & Tags
-                </h3>
-
-                {/* Category & Status */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Project Category
-                    </label>
-                    <select
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
-                    >
-                      <option value="web-app">Web Application</option>
-                      <option value="mobile-app">Mobile Application</option>
-                      <option value="desktop-app">Desktop Application</option>
-                      <option value="api">API/Backend</option>
-                      <option value="game">Game</option>
-                      <option value="ai-ml">AI/Machine Learning</option>
-                      <option value="blockchain">Blockchain</option>
-                      <option value="iot">IoT/Embedded Systems</option>
-                      <option value="cloud">Cloud/DevOps</option>
-                      <option value="cybersecurity">
-                        Cybersecurity/Privacy
-                      </option>
-                      <option value="ar-vr">
-                        AR/VR (Augmented/Virtual Reality)
-                      </option>
-                      <option value="data-science">
-                        Data Science/Analytics
-                      </option>
-                      <option value="automation">Automation/Scripting</option>
-                      <option value="cms">CMS/Website Builder</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Project Status
-                    </label>
-                    <select
-                      value={status}
-                      onChange={(e) => setStatus(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
-                    >
-                      <option value="completed">Completed</option>
-                      <option value="in-progress">In Progress</option>
-                      <option value="planning">Planning</option>
-                      <option value="paused">Paused</option>
-                      <option value="archived">Archived</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Tags */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Project Tags
-                  </label>
+                <div
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`border-3 border-dashed rounded-2xl flex flex-col items-center justify-center p-12 cursor-pointer transition-all duration-300 ${
+                    isDragging
+                      ? "border-blue-500 bg-blue-50 scale-105"
+                      : uploadedImage
+                      ? "border-green-400 bg-green-50"
+                      : "border-gray-400 hover:border-blue-400 hover:bg-blue-50"
+                  }`}
+                >
                   <input
-                    type="text"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
-                    placeholder="portfolio, fullstack, responsive, open-source (comma separated)"
-                    value={tags}
-                    onChange={(e) => setTags(e.target.value)}
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileSelect}
+                    accept="image/*"
+                    className="hidden"
+                    name="image"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Add relevant tags to help others discover your project
-                  </p>
+                  {!uploadedImage ? (
+                    <>
+                      <div
+                        className={`p-6 rounded-full mb-6 ${
+                          isDragging
+                            ? "bg-blue-100 text-blue-600"
+                            : "bg-white text-gray-500"
+                        } shadow-lg transition-all duration-300`}
+                      >
+                        <Upload size={48} />
+                      </div>
+                      <p className="font-bold text-xl mb-3 text-gray-800">
+                        {isDragging
+                          ? "Drop your photo here!"
+                          : "Upload Event Photo"}
+                      </p>
+                      <p className="text-base text-center text-gray-600">
+                        Drag & drop your image here or click to browse
+                        <br />
+                        <span className="text-sm font-medium text-blue-600 mt-2 block">
+                          Optional - you can skip this step
+                        </span>
+                      </p>
+                    </>
+                  ) : (
+                    <div className="text-center">
+                      <div className="relative inline-block mb-4">
+                        <img
+                          src={uploadedImage.preview}
+                          alt="Event preview"
+                          className="w-48 h-32 object-cover rounded-xl shadow-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeImage();
+                          }}
+                          className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                      <div className="p-4 rounded-full mb-4 bg-green-100 text-green-600 shadow-lg mx-auto w-fit">
+                        <CheckCircle size={32} />
+                      </div>
+                      <p className="font-bold text-green-600 mb-2">
+                        Photo Uploaded Successfully!
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Click anywhere to change image
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Additional Settings */}
@@ -427,62 +536,104 @@ const handleSubmit = async (e) => {
                 </h3>
 
                 {/* Project Summary */}
-                <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg p-6 space-y-4">
+                <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg p-6 space-y-10">
                   <h4 className="text-lg font-semibold text-gray-800 flex items-center space-x-2">
                     <Code className="w-5 h-5 text-purple-600" />
                     <span>Project Summary</span>
                   </h4>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Title:</span>
-                        <span className="font-medium">
-                          {title || "Not set"}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Category:</span>
-                        <span className="font-medium capitalize">
-                          {category.replace("-", " ")}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Status:</span>
-                        <span
-                          className={`font-medium capitalize px-2 py-1 rounded-full text-xs ${
-                            status === "completed"
-                              ? "bg-green-100 text-green-700"
-                              : status === "in-progress"
-                              ? "bg-blue-100 text-blue-700"
-                              : "bg-yellow-100 text-yellow-700"
-                          }`}
-                        >
-                          {status.replace("-", " ")}
-                        </span>
-                      </div>
-                    </div>
+                  <div className="space-y-6">
+                    {/* Info Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      {/* Left Column */}
+                      <div className="space-y-4">
+                        {/* Title */}
+                        <div>
+                          <p className="text-sm text-gray-500">Title :</p>
+                          <p className="text-lg font-semibold text-gray-800">
+                            {title || "Not set"}
+                          </p>
+                        </div>
 
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Description:</span>
-                        <span className="font-medium">
-                          {description.length} characters
-                        </span>
+                        {/* Category */}
+                        <div>
+                          <p className="text-sm text-gray-500">Category :</p>
+                          <p className="capitalize font-medium text-gray-700">
+                            {category.replace("-", " ")}
+                          </p>
+                        </div>
+
+                        {/* Tags */}
+                        <div>
+                          <p className="text-sm text-gray-500">Tags :</p>
+                          {tags ? (
+                            <div className="flex flex-wrap gap-2 mt-1">
+                              {tags.split(",").map((tag, i) => (
+                                <span
+                                  key={i}
+                                  className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-xs font-medium"
+                                >
+                                  {tag.trim()}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-gray-400 italic">No tags</p>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Tech Stack:</span>
-                        <span className="font-medium">
-                          {techStack.split(",").filter((t) => t.trim())
-                            .length || 0}{" "}
-                          technologies
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Images:</span>
-                        <span className="font-medium">
-                          {images.length} uploaded
-                        </span>
+
+                      {/* Right Column */}
+                      <div className="space-y-4">
+                        {/* Description */}
+                        <div>
+                          <p className="text-sm text-gray-500">Description :</p>
+                          <p className="text-gray-700 leading-relaxed">
+                            {description || "Not set"}
+                          </p>
+                        </div>
+
+                        {/* Tech Stack */}
+                        <div>
+                          <p className="text-sm text-gray-500">Tech Stack</p>
+                          {techStack ? (
+                            <div className="flex flex-wrap gap-2 mt-1">
+                              {techStack.split(",").map((tech, i) => (
+                                <span
+                                  key={i}
+                                  className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-medium"
+                                >
+                                  {tech.trim()}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-gray-400 italic">
+                              No technologies
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Images */}
+                        <div>
+                          <p className="text-sm text-gray-500">Images</p>
+                          {images.length > 0 ? (
+                            <div className="flex items-center space-x-2 mt-1">
+                              {images.map((img, i) => (
+                                <img
+                                  key={i}
+                                  src={img.preview}
+                                  alt={`Preview ${i}`}
+                                  className="w-14 h-14 object-cover rounded-lg shadow-sm border"
+                                />
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-gray-400 italic">
+                              No images uploaded
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -491,16 +642,26 @@ const handleSubmit = async (e) => {
                     <span className="text-gray-600">Links:</span>
                     <div className="flex space-x-4">
                       {repoLink && (
-                        <span className="flex items-center space-x-1 text-green-600">
+                        <a
+                          href={repoLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center space-x-1 text-green-600 hover:underline"
+                        >
                           <Github className="w-4 h-4" />
-                          <span>Repository</span>
-                        </span>
+                          <span>{repoLink}</span>
+                        </a>
                       )}
                       {liveLink && (
-                        <span className="flex items-center space-x-1 text-blue-600">
+                        <a
+                          href={liveLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center space-x-1 text-blue-600 hover:underline"
+                        >
                           <Globe className="w-4 h-4" />
-                          <span>Live Demo</span>
-                        </span>
+                          <span>{liveLink}</span>
+                        </a>
                       )}
                     </div>
                   </div>

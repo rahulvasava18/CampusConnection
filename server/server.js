@@ -7,6 +7,7 @@ import userRouter from './router/userRouter.js';
 import postRouter from './router/postRouter.js';
 import feedRouter from './router/feedRouter.js';
 import eventRouter from './router/eventRouter.js';
+import projectRouter from './router/projectRouter.js';
 import cors from 'cors';
 
 dotenv.config();
@@ -28,6 +29,7 @@ app.use("/api/user/", protect, userRouter);
 app.use("/api/post/", protect, postRouter);
 app.use("/api/feed/", protect, feedRouter);
 app.use("/api/event/", protect, eventRouter);
+app.use("/api/project/", protect, projectRouter);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

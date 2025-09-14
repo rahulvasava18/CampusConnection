@@ -22,7 +22,7 @@ const Sidebar = ({ user }) => {
   const navItems = [
     { icon: <FaHome />, label: "Home", path: "/home" },
     { icon: <FaPaperPlane />, label: "Post", path: "/post" },
-    { icon: <FaProjectDiagram />, label: "Projects", path: "/projects/myproject" },
+    { icon: <FaProjectDiagram />, label: "Projects", path: "/projects" },
     { icon: <FaMusic />, label: "Events", path: "/events/all" },
     { icon: <FaComment />, label: "Message", path: "/message" },
     { icon: <FaCog />, label: "Settings", path: "/settings" },
