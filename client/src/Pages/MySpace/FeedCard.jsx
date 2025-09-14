@@ -1,20 +1,30 @@
 import { useState } from "react";
-import { FaHeart, FaRegHeart, FaComment, FaPaperPlane, FaBookmark, FaRegBookmark, FaEllipsisH, FaUserPlus } from "react-icons/fa";
+import {
+  FaHeart,
+  FaRegHeart,
+  FaComment,
+  FaPaperPlane,
+  FaBookmark,
+  FaRegBookmark,
+  FaEllipsisH,
+  FaUserPlus,
+} from "react-icons/fa";
 import { FiSend } from "react-icons/fi";
+
+import { MessageCircle } from "lucide-react";
 
 export default function FeedCard({
   type = "post",
-user, // now expects the `author` object
-tags = [], // array of strings
-caption,
-hashtags = [], // array of strings, optional
-createdAt,
-likes = [], // array of user IDs who liked the post
-likesCount = 0, // number of likes
-comments = [], // array of comment objects
-commentsCount = 0, // number of comments
-images = [] // array of image objects {url, uploadedAt}
-
+  user, // now expects the `author` object
+  tags = [], // array of strings
+  caption,
+  hashtags = [], // array of strings, optional
+  createdAt,
+  likes = [], // array of user IDs who liked the post
+  likesCount = 0, // number of likes
+  comments = [], // array of comment objects
+  commentsCount = 0, // number of comments
+  images = [], // array of image objects {url, uploadedAt}
 }) {
   const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState("");
@@ -39,7 +49,7 @@ images = [] // array of image objects {url, uploadedAt}
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleAddComment();
     }
   };
@@ -52,18 +62,23 @@ images = [] // array of image objects {url, uploadedAt}
           <div className="relative">
             <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-0.5 rounded-full">
               <img
-                src={user.avatar || "https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg"}
+                src={
+                  user.avatar ||
+                  "https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg"
+                }
                 alt="avatar"
                 className="w-10 h-10 rounded-full border-2 border-white"
               />
             </div>
           </div>
           <div>
-            <h4 className="font-semibold text-gray-900 text-sm">{user.fullname || "Full Name"}</h4>
+            <h4 className="font-semibold text-gray-900 text-sm">
+              {user.fullname || "Full Name"}
+            </h4>
             <p className="text-xs text-gray-500">@{user.username}</p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <button className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1.5 rounded-full font-medium hover:opacity-90 transition">
             View Profile
@@ -73,17 +88,19 @@ images = [] // array of image objects {url, uploadedAt}
           </button>
         </div>
       </div>
-        
+
       {images.length > 0 && (
         <div className="w-full bg-gray-50 flex flex-col items-center justify-center h-auto overflow-hidden">
-          {images.map((img, idx) => (  
+          {images.map((img, idx) => (
             <img
-              key={idx}  
+              key={idx}
               src={img.url || ""}
               alt={`post-${idx}`}
               className="w-full object-cover mb-2"
-            />))}
-        </div>)}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Action buttons */}
       <div className="flex items-center justify-between px-4 py-3">
@@ -122,7 +139,7 @@ images = [] // array of image objects {url, uploadedAt}
 
       {/* Likes */}
       <div className="px-4 text-sm font-semibold text-gray-800 mb-1">
-        {likeCount} {likeCount === 1 ? 'like' : 'likes'}
+        {likeCount} {likeCount === 1 ? "like" : "likes"}
       </div>
 
       {/* Caption */}
@@ -159,58 +176,87 @@ images = [] // array of image objects {url, uploadedAt}
 
       {/* View comments */}
       {comments.length > 0 && !showComments && (
-        <button 
+        <button
           onClick={() => setShowComments(true)}
           className="px-4 text-sm text-gray-500 mb-2 hover:text-gray-700"
         >
-          View all {comments.length} {comments.length === 1 ? 'comment' : 'comments'}
+          View all {comments.length}{" "}
+          {comments.length === 1 ? "comment" : "comments"}
         </button>
       )}
 
       {/* Comments Section */}
       {showComments && (
-        <div className="px-4 pt-2 pb-3 bg-gray-50 border-t border-gray-100">
-          {comments.length > 0 ? (
-            <ul className="space-y-3 mb-3 max-h-60 overflow-y-auto py-1">
-              {comments.map((c, idx) => (
-                <li key={idx} className="text-sm flex items-start">
-                  <div className="bg-gradient-to-r from-blue-100 to-purple-100 p-1 rounded-full mr-2">
-                    <img
-                      src="https://via.placeholder.com/24"
-                      alt="avatar"
-                      className="w-6 h-6 rounded-full"
-                    />
-                  </div>
-                  <div className="bg-white px-3 py-2 rounded-2xl flex-1 shadow-sm">
-                    <span className="font-semibold mr-2">{c.user}</span>
-                    <span>{c.text}</span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-gray-500 mb-3 text-center py-2">No comments yet.</p>
-          )}
+        <div className="px-6 pb-6 border-t border-gray-100 bg-gradient-to-b from-gray-50 to-white">
+          <div className="pt-4 space-y-4">
+            <h4 className="font-semibold text-gray-900 text-sm">
+              Comments ({comments.length})
+            </h4>
 
-          {/* Add comment */}
-          <div className="flex items-center gap-2 pt-1">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                placeholder="Add a comment..."
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="w-full border border-gray-300 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-              />
-              <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-                <button 
-                  onClick={handleAddComment}
-                  disabled={!newComment.trim()}
-                  className={`p-1 rounded-full ${newComment.trim() ? 'text-blue-500 hover:text-blue-700' : 'text-gray-300'}`}
-                >
-                  <FaPaperPlane />
-                </button>
+            {/* Comments List */}
+            <div className="space-y-3 max-h-60 overflow-y-auto">
+              {comments.length > 0 ? (
+                comments.map((comment, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-white rounded-lg p-3 border border-gray-100"
+                  >
+                    <div className="flex items-start space-x-3">
+                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-white text-xs font-bold">
+                          {comment.user.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-900 text-sm">
+                          {comment.user}
+                        </p>
+                        <p className="text-gray-700 text-sm mt-1 leading-relaxed">
+                          {comment.text}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500 text-sm">
+                    No comments yet. Be the first to share your thoughts!
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Add Comment */}
+            <div className="bg-white rounded-xl p-4 border border-gray-200">
+              <div className="flex space-x-3">
+                <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-white text-xs font-bold">Y</span>
+                </div>
+                <div className="flex-1 space-y-3">
+                  <textarea
+                    placeholder="Share your thoughts about this event..."
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    rows="3"
+                  />
+                  <div className="flex justify-end">
+                    <button
+                      onClick={handleAddComment}
+                      disabled={!newComment.trim()}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 transform active:scale-95 ${
+                        newComment.trim()
+                          ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg shadow-blue-200 hover:shadow-xl"
+                          : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      }`}
+                    >
+                      Post Comment
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -219,7 +265,11 @@ images = [] // array of image objects {url, uploadedAt}
 
       {/* Timestamp */}
       <div className="px-4 py-2 text-xs text-gray-400 uppercase tracking-wide border-t border-gray-100">
-        {new Date(createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+        {new Date(createdAt).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })}
       </div>
     </div>
   );
