@@ -129,7 +129,7 @@ export default function EventCard({
   };
 
   return (
-    <div className="relative max-w-2xl mb-6 mx-auto bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+    <div className="relative max-w-2xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 mb-6">
       {/* User Header */}
       <div className="flex items-center justify-between px-4 py-3 shadow-sm bg-gray-50">
         <div className="flex items-center gap-3">

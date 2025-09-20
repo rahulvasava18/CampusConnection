@@ -800,7 +800,7 @@ const Profile = ({ setPagename }) => {
 
       {/* Tabs */}
       <div>
-        <nav className="flex space-x-8 border-b rounded-2xl border-gray-200 bg-white  p-4">
+        <nav className="flex space-x-8 border-b  border-gray-200 bg-white  p-4">
           {TABS.map((tab) => (
             <button
               key={tab.key}
@@ -817,7 +817,7 @@ const Profile = ({ setPagename }) => {
           ))}
         </nav>
 
-        <section className="py-4 bg-blue-100 rounded-2xl">
+        <section className="py-4 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 ">
           {tabData.length === 0 ? (
             <p className="text-center text-gray-400 italic">
               No {activeTab} to display.

@@ -70,12 +70,12 @@ const ProjectCard = ({ project }) => {
   };
 
   return (
-    <div className="max-w-2xl mb-6 mx-auto bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 transform  overflow-hidden group border border-gray-100">
+    <div className="max-w-2xl mb-6 mx-auto bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 transform  overflow-hidden group border border-gray-300">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 shadow-sm bg-gray-50">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-0.5 rounded-full">
+            <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-0.5 rounded-full ">
               {user?.profilePicture ? (
                 <img
                   src={user.profilePicture}
@@ -83,7 +83,7 @@ const ProjectCard = ({ project }) => {
                   className="w-10 h-10 rounded-full border-2 border-white object-cover"
                 />
               ) : (
-                <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0 ">
                   <span className="text-white text-xs font-bold">
                     {user?.username
                       ? user.username.charAt(0).toUpperCase()
