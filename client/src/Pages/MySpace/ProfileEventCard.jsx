@@ -13,7 +13,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 
-export default function EventCard({
+export default function ProfileEventCard({
   name,
   description,
   category,
@@ -32,7 +32,7 @@ export default function EventCard({
 }) {
   // User data state
   const [userData, setUserData] = useState("");
-
+  
   const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [upvote, setUpvote] = useState(upvotes);
@@ -46,7 +46,7 @@ export default function EventCard({
     async function fetchUserHeaderData() {
       try {
         const token = localStorage.getItem("token");
-        const userId = localStorage.getItem("userId");
+        // const userId = localStorage.getItem("userId");
 
         if (!token || !userId) {
           console.warn("No token or userId found in localStorage");
@@ -65,7 +65,6 @@ export default function EventCard({
         );
 
         if (response.data) {
-          console.log("User header data:", response.data);
           setUserData(response.data);
         } else {
           console.log("No user data found");
@@ -129,7 +128,7 @@ export default function EventCard({
   };
 
   return (
-    <div className="relative max-w-2xl mb-6 mx-auto bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+    <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 transform transition-transform ">
       {/* User Header */}
       <div className="flex items-center justify-between px-4 py-3 shadow-sm bg-gray-50">
         <div className="flex items-center gap-3">
@@ -167,8 +166,13 @@ export default function EventCard({
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1.5 rounded-full font-medium hover:opacity-90 transition">
-            View Profile
+          <button className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1.5 rounded-full font-medium hover:opacity-90 transition"
+          onClick={() => alert('Follow feature coming soon!')}>
+            Edit
+          </button>
+          <button className="text-xs bg-gradient-to-r from-red-500 to-red-700 text-white px-3 py-1.5 rounded-full font-medium hover:opacity-90 transition"
+          onClick={() => alert('Delete feature coming soon!')}>
+            Delete
           </button>
         </div>
       </div>

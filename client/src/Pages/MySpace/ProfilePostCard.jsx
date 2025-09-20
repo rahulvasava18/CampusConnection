@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import {
   FaHeart,
   FaRegHeart,
@@ -10,12 +10,13 @@ import {
   FaUserPlus,
 } from "react-icons/fa";
 import { FiSend } from "react-icons/fi";
+import axios from "axios";
 
 import { MessageCircle } from "lucide-react";
 
-export default function FeedCard({
+export default function ProfilePostCard({
   type = "post",
-  user, // now expects the `author` object
+  userId, // now expects the `author` object
   tags = [], // array of strings
   caption,
   hashtags = [], // array of strings, optional
@@ -31,6 +32,41 @@ export default function FeedCard({
   const [likeCount, setLikeCount] = useState(likes);
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [user, setUser] = useState("");
+
+   useEffect(() => {
+    async function fetchUserHeaderData() {
+      try {
+        const token = localStorage.getItem("token");
+        const userId = localStorage.getItem("userId");
+  
+        if (!token || !userId) {
+          console.warn("No token or userId found in localStorage");
+          setUser(null);
+          return;
+        }
+
+        const config = {
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true,
+        };
+  
+        const response = await axios.get(`http://localhost:3000/api/user/headerdata/${userId}`, config);
+  
+        if (response.data) {
+          setUser(response.data);
+        } else {
+          console.log("No user data found");
+          setUser(null);
+        }
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+        setUser(null);
+      }
+    }
+  
+    fetchUserHeaderData();
+  }, []); // depends on `project`
 
   const toggleLike = () => {
     setLiked(!liked);
@@ -54,51 +90,46 @@ export default function FeedCard({
     }
   };
 
-  // User data state
-    const [userData, setUserData] = useState({
-      username: "rahul",
-      fullName: "Rahul Vasava",
-      // profilePicture:
-      //   "https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg",
-    });
-
   return (
-    <div className="bg-white rounded-xl shadow-lg mb-6 max-w-2xl mx-auto overflow-hidden border border-gray-100">
+    <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 transform transition-transform ">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 shadow-sm bg-gray-50">
         <div className="flex items-center gap-3">
-          
           <div className="relative">
             <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-0.5 rounded-full">
-              {userData?.profilePicture ? (
+              {user?.profilePicture ? (
                 <img
-                  src={userData.profilePicture}
-                  alt={userData.username || "User avatar"}
+                  src={user.profilePicture}
+                  alt={user.username || "User avatar"}
                   className="w-10 h-10 rounded-full border-2 border-white object-cover"
                 />
               ) : (
                 <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
                   <span className="text-white text-xs font-bold">
-                    {userData?.username
-                      ? userData.username.charAt(0).toUpperCase()
+                    {user?.username
+                      ? user.username.charAt(0).toUpperCase()
                       : ":)"}
                   </span>
                 </div>
               )}
             </div>
           </div>
-
           <div>
             <h4 className="font-semibold text-gray-900 text-sm">
-              {user.fullname || "Full Name"}
+              {user?.fullname || "Full Name"}
             </h4>
-            <p className="text-xs text-gray-500">@{user.username}</p>
+            <p className="text-xs text-gray-500">@{user?.username}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1.5 rounded-full font-medium hover:opacity-90 transition">
-            View Profile
+          <button className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1.5 rounded-full font-medium hover:opacity-90 transition"
+          onClick={() => alert('Follow feature coming soon!')}>
+            Edit
+          </button>
+          <button className="text-xs bg-gradient-to-r from-red-500 to-red-700 text-white px-3 py-1.5 rounded-full font-medium hover:opacity-90 transition"
+          onClick={() => alert('Delete feature coming soon!')}>
+            Delete
           </button>
         </div>
       </div>
@@ -110,7 +141,7 @@ export default function FeedCard({
               key={idx}
               src={img.url || ""}
               alt={`post-${idx}`}
-              className="w-full object-cover mb-2"
+              className="max-w-full max-h-52 object-contain mb-2"
             />
           ))}
         </div>
@@ -158,8 +189,8 @@ export default function FeedCard({
 
       {/* Caption */}
       <div className="px-4 py-1 text-sm">
-        <span className="font-bold mr-2">{user.username}</span>
-        <span className="text-gray-800">{caption}</span>
+        <span className="font-bold mr-2">{user?.username}</span>
+        <span className="text-gray-800 ">{caption}</span>
         {hashtags.length > 0 && (
           <div className="mt-1 flex flex-wrap gap-1">
             {hashtags.map((hash, idx) => (
@@ -180,7 +211,7 @@ export default function FeedCard({
           {tags.map((tag, idx) => (
             <span
               key={idx}
-              className="text-xs bg-gradient-to-r from-blue-50 to-purple-50 text-blue-600 px-2.5 py-1 rounded-full border border-blue-100"
+              className="text-xs bg-gradient-to-r from-blue-50 to-purple-50 text-blue-600 px-2 py-1 rounded-full border border-blue-100"
             >
               {tag}
             </span>
@@ -234,7 +265,7 @@ export default function FeedCard({
                 ))
               ) : (
                 <div className="text-center py-8">
-                  <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <MessageCircle className="w-12 h-6 text-gray-300 mx-auto mb-3" />
                   <p className="text-gray-500 text-sm">
                     No comments yet. Be the first to share your thoughts!
                   </p>
@@ -246,12 +277,7 @@ export default function FeedCard({
             <div className="bg-white rounded-xl p-4 border border-gray-200">
               <div className="flex space-x-3">
                 <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-white text-xs font-bold">
-                    {" "}
-                    {userData?.username
-                      ? userData.username.charAt(0).toUpperCase()
-                      : ":)"}
-                  </span>
+                  <span className="text-white text-xs font-bold">Y</span>
                 </div>
                 <div className="flex-1 space-y-3">
                   <textarea

@@ -5,7 +5,7 @@ import multer from "multer";
 const storage = multer.memoryStorage(); 
 const upload = multer({ storage });
 
-import { CreatePost, GetAllPosts, GetPostByID, DeletePost, LikePost, UnlikePost,CommentOnPost,deleteComment,GetComments } from '../controllers/postController.js';
+import { CreatePost, GetAllPosts, GetPostByID, DeletePost, LikePost, UnlikePost,CommentOnPost,DeleteComment,GetComments } from '../controllers/postController.js';
 
 router.get("/", GetAllPosts);//done
 router.post("/", upload.array("images"), CreatePost);//done
@@ -14,7 +14,7 @@ router.delete("/deletePost", DeletePost);//done
 router.post("/like", LikePost);//done
 router.post("/unlike", UnlikePost);//done
 router.post("/comment", CommentOnPost);//done
-// router.delete("/deleteComment", DeleteComment);//done
+router.delete("/deleteComment", DeleteComment);//done
 router.get("/getComments", GetComments);//done
 
 export default router;

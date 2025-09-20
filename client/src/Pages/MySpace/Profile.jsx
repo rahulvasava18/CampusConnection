@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+
+import ProfilePostCard from "./ProfilePostCard";
+import ProfileProjectCard from "./ProfileProjectCard";
+import ProfileEventCard from "./ProfileEventCard";
+
 import {
   FiMoreHorizontal,
   FiX,
@@ -16,8 +21,10 @@ import {
   FiGithub,
 } from "react-icons/fi";
 
+import { FaPaperPlane } from "react-icons/fa";
+
 const TABS = [
-  { key: "posts", label: "Posts", icon: <FiMoreHorizontal size={20} /> },
+  { key: "posts", label: "Posts", icon: <FaPaperPlane size={20} /> },
   { key: "events", label: "Events", icon: <FiCalendar size={20} /> },
   { key: "projects", label: "Projects", icon: <FiBookOpen size={20} /> },
 ];
@@ -58,20 +65,22 @@ const Profile = ({ setPagename }) => {
         setError(null);
 
         const config = {
-
           headers: { Authorization: `Bearer ${token}` },
           withCredentials: true,
         };
 
-        const [userRes] = await Promise.all([
-          axios.get(`http://localhost:3000/api/user/profile/${userId}`,config),
+        const [userRes, postsRes, eventsRes, projectsRes] = await Promise.all([
+          axios.get(`http://localhost:3000/api/user/profile/${userId}`, config),
+          axios.get(`http://localhost:3000/api/user/post/${userId}`, config),
+          axios.get(`http://localhost:3000/api/user/event/${userId}`, config),
+          axios.get(`http://localhost:3000/api/user/project/${userId}`, config),
         ]);
 
         setUser(userRes.data);
-        // setPosts(postsRes.data);
-        // setEvents(eventsRes.data);
-        // setProjects(projectsRes.data);
-        // setFormData(userRes.data); // Pre-fill formData with user data
+        setPosts(postsRes.data);
+        setEvents(eventsRes.data);
+        setProjects(projectsRes.data);
+        setFormData(userRes.data); // Pre-fill formData with user data
       } catch (err) {
         if (err.response) {
           setError(err.response.data.message || err.response.statusText);
@@ -146,7 +155,6 @@ const Profile = ({ setPagename }) => {
 
     try {
       const config = {
-        params: { userId} ,
         headers: { Authorization: `Bearer ${token}` },
         withCredentials: true,
       };
@@ -154,18 +162,25 @@ const Profile = ({ setPagename }) => {
       const { username, ...editableData } = formData;
 
       // PUT request to update user profile
-      await axios.put("http://localhost:3000/api/user/update", editableData, config);
-
+      await axios.put(
+        `http://localhost:3000/api/user/update/${userId}`,
+        editableData,
+        config
+      );
       setSubmitSuccess("Profile updated successfully!");
       setEditMode(false);
       setMoreDetails(null);
 
       // Refresh user data from server
-      const res = await axios.get("http://localhost:3000/api/user/me", config);
+      const res = await axios.get(
+        `http://localhost:3000/api/user/profile/${userId}`,
+        config
+      );
       setUser(res.data);
       setFormData(res.data);
     } catch (err) {
-      if (err.response) setSubmitError(err.response.data.message || err.response.statusText);
+      if (err.response)
+        setSubmitError(err.response.data.message || err.response.statusText);
       else if (err.request) setSubmitError("No response from server.");
       else setSubmitError(err.message);
     } finally {
@@ -235,6 +250,7 @@ const Profile = ({ setPagename }) => {
               <div className="flex space-x-6 border-t border-gray-200 pt-4">
                 {[
                   { label: "Posts", value: posts.length },
+                  { label: "Projects", value: projects.length },
                   { label: "Followers", value: user.followers?.length || 0 },
                   { label: "Following", value: user.following?.length || 0 },
                 ].map((stat) => (
@@ -326,7 +342,8 @@ const Profile = ({ setPagename }) => {
                 <strong>Division:</strong> {moreDetails.division || "-"}
               </p>
               <p className="mb-1">
-                <strong>Specialization:</strong> {moreDetails.specialization || "-"}
+                <strong>Specialization:</strong>{" "}
+                {moreDetails.specialization || "-"}
               </p>
               <p className="mb-1">
                 <strong>Year of Study:</strong> {moreDetails.yearOfStudy || "-"}
@@ -407,7 +424,10 @@ const Profile = ({ setPagename }) => {
             <span>Edit Profile</span>
           </h3>
 
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6 text-indigo-900">
+          <form
+            onSubmit={handleSubmit}
+            className="grid grid-cols-1 md:grid-cols-2 gap-6 text-indigo-900"
+          >
             {/* Username - disabled */}
             <div>
               <label htmlFor="username" className="block font-semibold mb-1">
@@ -450,7 +470,6 @@ const Profile = ({ setPagename }) => {
                 value={formData.email || ""}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-indigo-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-  
               />
             </div>
 
@@ -483,9 +502,7 @@ const Profile = ({ setPagename }) => {
                 id="dateOfBirth"
                 name="dateOfBirth"
                 value={
-                  formData.dateOfBirth
-                    ? formData.dateOfBirth.split("T")[0]
-                    : ""
+                  formData.dateOfBirth ? formData.dateOfBirth.split("T")[0] : ""
                 }
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-indigo-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -569,7 +586,10 @@ const Profile = ({ setPagename }) => {
 
             {/* Specialization */}
             <div>
-              <label htmlFor="specialization" className="block font-semibold mb-1">
+              <label
+                htmlFor="specialization"
+                className="block font-semibold mb-1"
+              >
                 Specialization
               </label>
               <input
@@ -780,7 +800,7 @@ const Profile = ({ setPagename }) => {
 
       {/* Tabs */}
       <div>
-        <nav className="flex space-x-8 border-b border-gray-200 bg-white  p-4">
+        <nav className="flex space-x-8 border-b rounded-2xl border-gray-200 bg-white  p-4">
           {TABS.map((tab) => (
             <button
               key={tab.key}
@@ -797,25 +817,65 @@ const Profile = ({ setPagename }) => {
           ))}
         </nav>
 
-        <section className="p-6 bg-white rounded-2xl">
+        <section className="py-4 bg-blue-100 rounded-2xl">
           {tabData.length === 0 ? (
             <p className="text-center text-gray-400 italic">
               No {activeTab} to display.
             </p>
           ) : (
-            <ul className="space-y-4">
-              {tabData.map((item) => (
-                <li
-                  key={item._id || item.id}
-                  className="bg-white rounded-xl shadow p-4"
-                >
-                  <h3 className="font-semibold text-lg mb-1">
-                    {item.title || item.name || "Untitled"}
-                  </h3>
-                  <p className="text-gray-700">{item.description || ""}</p>
-                </li>
-              ))}
-            </ul>
+            <>
+              {(() => {
+                switch (activeTab) {
+                  case "posts":
+                    return (
+                      <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        {posts.map((item) => (
+                          <ProfilePostCard key={item._id} {...item} />
+                        ))}
+                      </ul>
+                    );
+                  case "events":
+                    return (
+                      <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        {events.map((event) => (
+                          <ProfileEventCard
+                            key={event._id}
+                            name={event.name}
+                            description={event.description}
+                            category={event.category}
+                            tags={event.tags}
+                            hostName={event.hostName}
+                            createdBy={event.createdBy}
+                            location={event.location}
+                            date={event.date}
+                            image={event.image}
+                            attendees={event.attendees}
+                            upvotes={event.upvotes}
+                            goingCount={event.goingCount} // corrected prop
+                            comments={event.comments}
+                            createdAt={event.createdAt}
+                            userId={userId}
+                          />
+                        ))}
+                      </ul>
+                    );
+                  case "projects":
+                    return (
+                      <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4">
+                        {projects.map((project) => (
+                          <ProfileProjectCard
+                            key={project._id}
+                            userId={userId}
+                            project={project}
+                          />
+                        ))}
+                      </ul>
+                    );
+                  default:
+                    return null;
+                }
+              })()}
+            </>
           )}
         </section>
       </div>

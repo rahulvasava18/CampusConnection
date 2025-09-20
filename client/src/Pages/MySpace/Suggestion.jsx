@@ -110,7 +110,7 @@ export default function SuggestionBar() {
   };
 
   return (
-    <div className=" bg-white rounded-xl shadow-lg w-fit max-h-[750px] overflow-hidden flex flex-col">
+    <div className=" bg-white rounded-xl shadow-lg w-fit max-h-[750px] overflow-hidden flex flex-col m-4">
       {/* Header */}
       <div className="p-4 border-b border-gray-100">
         <h2 className="text-xl font-bold text-gray-800">Search</h2>

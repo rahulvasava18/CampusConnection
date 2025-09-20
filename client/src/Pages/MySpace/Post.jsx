@@ -103,8 +103,7 @@ const Post = () => {
 
   const steps = [
     { number: 1, title: "Media & Caption", icon: Image },
-    { number: 2, title: "Content & Tags", icon: Check },
-    { number: 3, title: "Preview & Publish", icon: Eye },
+    { number: 2, title: "Preview & Publish", icon: Eye },
   ];
   const token = localStorage.getItem("token");
   // Drag and drop handlers
@@ -154,15 +153,7 @@ const Post = () => {
 
   const nextStep = () => {
     if (currentStep === 1) {
-      // Validate step 1 - optional validation
       setCurrentStep(2);
-    } else if (currentStep === 2) {
-      if (!content.trim()) {
-        setError("Content is required to proceed.");
-        return;
-      }
-      setError(null);
-      setCurrentStep(3);
     }
   };
 
@@ -178,11 +169,6 @@ const Post = () => {
     setError(null);
     setSuccess(null);
 
-    if (!content.trim()) {
-      setError("Content cannot be empty.");
-      return;
-    }
-
     const tagsArray = tags
       .split(",")
       .map((tag) => tag.trim())
@@ -190,7 +176,6 @@ const Post = () => {
 
     // Prepare form data
     const formData = new FormData();
-    formData.append("content", content);
     formData.append("caption", caption);
     formData.append("privacy", isPrivate ? "private" : "public");
     tagsArray.forEach((tag) => formData.append("tags[]", tag));
@@ -200,7 +185,7 @@ const Post = () => {
 
       // Simulate API call
       const response = await fetch("http://localhost:3000/api/post/", {
-        timeout: 20000 ,
+        timeout: 20000,
         method: "POST",
         body: formData,
         headers: {
@@ -219,7 +204,6 @@ const Post = () => {
       setSuccess("Post created successfully!");
 
       // Reset form
-      setContent("");
       setCaption("");
       setTags("");
       setType("regular");
@@ -236,32 +220,6 @@ const Post = () => {
 
   const username = localStorage.getItem("username") || "you";
   const fullname = localStorage.getItem("fullname") || "You";
-  // Prepare temporary content for FeedCard preview
-  const tempPost = {
-    type: "post",
-    user: {
-      name: fullname,
-      username: username,
-      avatar: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQbZPi8Q25_Wy5OnIrMEji5_Rk63WhS77URXw&s",
-    },
-    content: content, // plain text content
-    tags: tags
-    .split(",") // split string into array
-    .map((t) => t.trim())
-    .filter((t) => t), // remove empty strings,
-    caption: caption,
-     // use the same array as formData
-    images: images.map((file) => ({
-      url: URL.createObjectURL(file), // temporary preview of each image
-      uploadedAt: new Date().toISOString(),
-    })),
-    hashtags: [], // you can add hashtag parsing if needed
-    createdAt: new Date(),
-    likes: [],
-    likesCount: 0,
-    comments: [],
-    commentsCount: 0,
-  };
 
   const StepIndicator = () => (
     <div className="flex items-center justify-center mb-8">
@@ -308,11 +266,10 @@ const Post = () => {
   );
 
   return (
-    <div className="max-w-6xl mx-auto mt-10 px-4">
-      
+    <div className="max-w-7xl">
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Main Form */}
-        <div className="flex-1 bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+        <div className="flex-1 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 shadow-xl p-8 border border-gray-100">
           <h2 className="text-3xl font-bold mb-8 text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             Create Your Post
           </h2>
@@ -406,33 +363,6 @@ const Post = () => {
                     {caption.length} / 500
                   </p>
                 </div>
-              </div>
-            )}
-
-            {currentStep === 2 && (
-              <div className="space-y-6 animate-in slide-in-from-right duration-300">
-                <h3 className="text-xl font-semibold text-gray-800 mb-6">
-                  Content & Tags
-                </h3>
-
-                {/* Content */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Content <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    className="w-full px-4 py-4 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                    placeholder="Share your thoughts, story, or message..."
-                    maxLength={3000}
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    required
-                    rows={8}
-                  />
-                  <p className="text-right text-xs text-gray-500 mt-1">
-                    {content.length} / 3000
-                  </p>
-                </div>
 
                 {/* Tags */}
                 <div>
@@ -450,42 +380,10 @@ const Post = () => {
                     Separate tags with commas to help others discover your post
                   </p>
                 </div>
-
-                {/* Post Type & Privacy */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Post Type
-                    </label>
-                    <select
-                      value={type}
-                      onChange={(e) => setType(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                    >
-                      <option value="regular">Regular Post</option>
-                      <option value="announcement">Announcement</option>
-                      <option value="question">Question</option>
-                      <option value="poll">Poll</option>
-                    </select>
-                  </div>
-
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="checkbox"
-                      id="privacy"
-                      checked={isPrivate}
-                      onChange={(e) => setIsPrivate(e.target.checked)}
-                      className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor="privacy" className="text-sm text-gray-700">
-                      Make this post private
-                    </label>
-                  </div>
-                </div>
               </div>
             )}
 
-            {currentStep === 3 && (
+            {currentStep === 2 && (
               <div className="space-y-6 animate-in slide-in-from-right duration-300">
                 <h3 className="text-xl font-semibold text-gray-800 mb-6">
                   Preview & Publish
@@ -496,42 +394,33 @@ const Post = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Images:</span>
                     <span className="text-sm font-medium">
-                      {images.length} selected
+                      {images.length} Selected 
                     </span>
                   </div>
+                  
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">
-                      Content length:
-                    </span>
+                    <span className="text-sm text-gray-600">Caption:</span>
                     <span className="text-sm font-medium">
-                      {content.length} characters
+                      {caption || "No caption provided"} 
                     </span>
                   </div>
+
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Tags:</span>
                     <span className="text-sm font-medium">
                       {tags.split(",").filter((t) => t.trim()).length || 0} tags
                     </span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Privacy:</span>
-                    <span
-                      className={`text-sm font-medium ${
-                        isPrivate ? "text-orange-600" : "text-green-600"
-                      }`}
-                    >
-                      {isPrivate ? "Private" : "Public"}
-                    </span>
-                  </div>
+                  
                 </div>
 
                 {/* Final Submit Button */}
                 <button
                   type="submit"
                   onClick={handleSubmit}
-                  disabled={loading || !content.trim()}
+                  disabled={loading || !caption.trim()}
                   className={`w-full py-4 rounded-lg text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 ${
-                    loading || !content.trim()
+                    loading || !caption.trim()
                       ? "bg-gray-400 cursor-not-allowed"
                       : "bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700"
                   }`}
@@ -566,7 +455,7 @@ const Post = () => {
           )}
 
           {/* Navigation Buttons */}
-          {currentStep < 3 && (
+          {currentStep < 2 && (
             <div className="flex justify-between mt-8">
               <button
                 type="button"
@@ -585,7 +474,13 @@ const Post = () => {
               <button
                 type="button"
                 onClick={nextStep}
-                className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl"
+                disabled={caption.trim().length === 0}
+                className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-xl
+    ${
+      caption.trim().length === 0
+        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+        : "bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700"
+    }`}
               >
                 <span>Next</span>
                 <ArrowRight className="w-4 h-4" />
@@ -606,7 +501,6 @@ const Post = () => {
             </div>
           )}
         </div>
-
       </div>
     </div>
   );

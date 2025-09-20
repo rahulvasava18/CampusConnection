@@ -35,7 +35,7 @@ const Settings = () => {
   ];
 
   return (
-    <div className={`h-auto mt-8 rounded-2xl  font-inter flex max-w-6xl mx-auto ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+    <div className={`h-screen  font-inter flex max-w-7xl mx-auto ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
       {/* Sidebar */}
       <div className={`w-64 ${darkMode ? 'bg-gray-800' : 'bg-white'} border-r ${darkMode ? 'border-gray-700' : 'border-gray-200'} p-5`}>
         <h1 className="text-xl font-bold mb-6 flex items-center gap-2">

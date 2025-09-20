@@ -136,9 +136,9 @@ const ProjectPost = () => {
       .split(",")
       .map((tech) => tech.trim())
       .filter((tech) => tech.length > 0);
- 
-    const userId = localStorage.getItem("userId");  
-    
+
+    const userId = localStorage.getItem("userId");
+
     const formData = new FormData();
     formData.append("user", userId);
     formData.append("title", title);
@@ -155,13 +155,17 @@ const ProjectPost = () => {
     const token = localStorage.getItem("token");
 
     try {
-      const response = await axios.post("http://localhost:3000/api/project/createProject/", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data" 
-        },
-        timeout: 10000,
-      });
+      const response = await axios.post(
+        "http://localhost:3000/api/project/createProject/",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+          timeout: 10000,
+        }
+      );
 
       if (response.status === 201 || response.status === 200) {
         setSuccess("Project created successfully!");
@@ -318,27 +322,39 @@ const ProjectPost = () => {
                       onChange={(e) => setCategory(e.target.value)}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
                     >
-                      <option value="web-app">Web Application</option>
-                      <option value="mobile-app">Mobile Application</option>
-                      <option value="desktop-app">Desktop Application</option>
-                      <option value="api">API/Backend</option>
-                      <option value="game">Game</option>
-                      <option value="ai-ml">AI/Machine Learning</option>
-                      <option value="blockchain">Blockchain</option>
-                      <option value="iot">IoT/Embedded Systems</option>
-                      <option value="cloud">Cloud/DevOps</option>
-                      <option value="cybersecurity">
+                      <option value="Web Application">Web Application</option>
+                      <option value="Mobile Application">
+                        Mobile Application
+                      </option>
+                      <option value="Desktop Application">
+                        Desktop Application
+                      </option>
+                      <option value="API/Backend">API/Backend</option>
+                      <option value="Game">Game</option>
+                      <option value="AI/Machine Learning">
+                        AI/Machine Learning
+                      </option>
+                      <option value="Blockchain">Blockchain</option>
+                      <option value="IoT/Embedded Systems">
+                        IoT/Embedded Systems
+                      </option>
+                      <option value="Cloud/DevOps">Cloud/DevOps</option>
+                      <option value="Cybersecurity/Privacy">
                         Cybersecurity/Privacy
                       </option>
-                      <option value="ar-vr">
+                      <option value="AR/VR (Augmented/Virtual Reality)">
                         AR/VR (Augmented/Virtual Reality)
                       </option>
-                      <option value="data-science">
+                      <option value="Data Science/Analytics">
                         Data Science/Analytics
                       </option>
-                      <option value="automation">Automation/Scripting</option>
-                      <option value="cms">CMS/Website Builder</option>
-                      <option value="other">Other</option>
+                      <option value="Automation/Scripting">
+                        Automation/Scripting
+                      </option>
+                      <option value="CMS/Website Builder">
+                        CMS/Website Builder
+                      </option>
+                      <option value="Other">Other</option>
                     </select>
                   </div>
                 </div>
@@ -675,7 +691,7 @@ const ProjectPost = () => {
                   className={`w-full py-4 rounded-lg text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 ${
                     loading || !title.trim() || !description.trim()
                       ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700"
+                      : "bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700"
                   }`}
                 >
                   {loading ? (

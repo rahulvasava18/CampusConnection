@@ -22,14 +22,41 @@ export const GetProfile = async(req,res) => {
   }
 }
 
+export const GetHeaderData = async(req,res) => {
+  try {
+    const { userId } = req.params;
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+    const user = await User.findById(userId).select("username profilePic fullname");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json(user);
+  }
+  catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  } 
+}  
 //----------------------------------------------------------------------------------------------------
 
 // Get all posts of the logged-in user
 export const GetPost = async (req, res) => {
   try {
-    const { userId } = req.query; // user id from auth middleware
+    const { userId } = req.params; // user id from auth middleware
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
 
-    const posts = await Post.find({ user: userId }).sort({ createdAt: -1 });
+    const posts = await Post.find({ author: userId }).sort({ createdAt: -1 });
+   
+    if (!posts) {
+      return res.status(404).json({ message: "No posts found for this user" });
+    }
+
     res.status(200).json(posts);
   } catch (error) {
     console.error("GetPost error:", error);
@@ -40,9 +67,20 @@ export const GetPost = async (req, res) => {
 // Get all events of the logged-in user
 export const GetEvent = async (req, res) => {
   try {
-    const { userId } = req.query;
+    const { userId } = req.params;
 
-    const events = await Event.find({ user: userId }).sort({ date: -1 });
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    const events = await Event.find({ "createdBy.userId": userId }).sort({ date: -1 });
+    if (!events) {
+      return res.status(404).json({ message: "No events found for this user" });
+    }
+    
     res.status(200).json(events);
   } catch (error) {
     console.error("GetEvent error:", error);
@@ -53,9 +91,19 @@ export const GetEvent = async (req, res) => {
 // Get all projects of the logged-in user
 export const GetProject = async (req, res) => {
   try {
-    const { userId } = req.query;
+    const { userId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
 
     const projects = await Project.find({ user: userId }).sort({ createdAt: -1 });
+    if (!projects) {
+      return res.status(404).json({ message: "No projects found for this user" });
+    }
+
     res.status(200).json(projects);
   } catch (error) {
     console.error("GetProject error:", error);
@@ -66,7 +114,7 @@ export const GetProject = async (req, res) => {
 //------------------------------------------------------------------------------------------------------
 export const UpdateUserProfile = async (req, res) => {
   try {
-    const userId = req.query.userId;
+    const { userId } = req.params;
     const updates = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -91,7 +139,7 @@ export const UpdateUserProfile = async (req, res) => {
       updatesFiltered,
       { new: true, runValidators: true }
     ).select("-password");
-
+    
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }

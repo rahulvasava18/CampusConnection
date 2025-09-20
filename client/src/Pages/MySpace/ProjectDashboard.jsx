@@ -21,30 +21,7 @@ const ProjectCard = (project) => {
   const [isLiked, setIsLiked] = useState(false);
   const [upvotes, setUpvotes] = useState(247);
 
-  // // Sample project data based on your schema
-  // const project = {
-  //   title: "AI-Powered Task Manager",
-  //   description:
-  //     "A smart productivity app that uses machine learning to prioritize tasks, predict completion times, and optimize your daily workflow. Features real-time collaboration, voice commands, and intelligent scheduling.",
-  //   techStack: ["React", "Node.js", "Python", "TensorFlow", "MongoDB"],
-  //   repoLink: "https://github.com/user/ai-task-manager",
-  //   liveLink: "https://ai-taskmanager.demo.com",
-  //   category: "Productivity",
-  //   tags: ["AI", "Machine Learning", "Productivity", "React"],
-  //   image: {
-  //     url: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=400&h=250&fit=crop",
-  //     width: 400,
-  //     height: 250,
-  //   },
-  //   comments: Array(23).fill({}), // Mock comments array
-  //   createdAt: new Date("2024-08-15"),
-  //   user: {
-  //     name: "Alex Chen",
-  //     avatar:
-  //       "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
-  //   },
-  // };
-
+ 
   const handleUpvote = () => {
     setIsLiked(!isLiked);
     setUpvotes((prev) => (isLiked ? prev - 1 : prev + 1));
@@ -136,7 +113,7 @@ const ProjectCard = (project) => {
       <div className="relative overflow-hidden h-48">
         <img
           src={project?.image?.url || "https://via.placeholder.com/400x250"}
-          alt={project?.title || "Project Image"}
+          alt={""}
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -291,27 +268,28 @@ const ProjectDashboard = () => {
   const [loggedInUserId, setLoggedInUserId] = useState(null);
 
   const categories = [
-    { value: "all", label: "All Categories" },
-    { value: "web-app", label: "Web Application" },
-    { value: "mobile-app", label: "Mobile Application" },
-    { value: "desktop-app", label: "Desktop Application" },
-    { value: "api", label: "API/Backend" },
-    { value: "game", label: "Game" },
-    { value: "ai-ml", label: "AI/Machine Learning" },
-    { value: "blockchain", label: "Blockchain" },
-    { value: "iot", label: "IoT/Embedded Systems" },
-    { value: "cloud", label: "Cloud/DevOps" },
-    { value: "cybersecurity", label: "Cybersecurity/Privacy" },
-    { value: "ar-vr", label: "AR/VR (Augmented/Virtual Reality)" },
-    { value: "data-science", label: "Data Science/Analytics" },
-    { value: "automation", label: "Automation/Scripting" },
-    { value: "cms", label: "CMS/Website Builder" },
-    { value: "other", label: "Other" },
-  ];
+  { value: "all", label: "All Categories" },
+  { value: "Web Application", label: "Web Application" },
+  { value: "Mobile Application", label: "Mobile Application" },
+  { value: "Desktop Application", label: "Desktop Application" },
+  { value: "API/Backend", label: "API/Backend" },
+  { value: "Game", label: "Game" },
+  { value: "AI/Machine Learning", label: "AI/Machine Learning" },
+  { value: "Blockchain", label: "Blockchain" },
+  { value: "IoT/Embedded Systems", label: "IoT/Embedded Systems" },
+  { value: "Cloud/DevOps", label: "Cloud/DevOps" },
+  { value: "Cybersecurity/Privacy", label: "Cybersecurity/Privacy" },
+  { value: "AR/VR (Augmented/Virtual Reality)", label: "AR/VR (Augmented/Virtual Reality)" },
+  { value: "Data Science/Analytics", label: "Data Science/Analytics" },
+  { value: "Automation/Scripting", label: "Automation/Scripting" },
+  { value: "CMS/Website Builder", label: "CMS/Website Builder" },
+  { value: "Other", label: "Other" },
+];
+
 
   // ✅ Fetch ALL projects once
   useEffect(() => {
-    const fetchAllProjects = async () => {
+    const fetchProjects = async () => {
       setLoading(true);
       try {
         const token = localStorage.getItem("token");
@@ -329,16 +307,18 @@ const ProjectDashboard = () => {
       }
     };
 
-    fetchAllProjects();
+    fetchProjects();
   }, []);
 
   // ✅ Apply search + filters
   useEffect(() => {
     let result = [...allProjects];
 
+    const userId = localStorage.getItem("userId");
+
     // If in My Projects tab, filter by loggedInUserId
-    if (activeTab === "myprojects" && loggedInUserId) {
-      result = result.filter((p) => p.user === loggedInUserId);
+    if (activeTab === "myprojects" && userId) {
+      result = result.filter((p) => p.user === userId);
     }
 
     // Search
@@ -353,6 +333,7 @@ const ProjectDashboard = () => {
     // Category
     if (categoryFilter !== "all") {
       result = result.filter((project) => project.category === categoryFilter);
+      console.log("After category filter:", result);
     }
 
     // Sorting
@@ -377,7 +358,6 @@ const ProjectDashboard = () => {
   }, [
     allProjects,
     activeTab,
-    loggedInUserId,
     searchQuery,
     categoryFilter,
     sortBy,
@@ -397,9 +377,9 @@ const ProjectDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-indigo-100 p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+      <div className="max-w-7xl mx-auto">
+        <div className="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 shadow-lg overflow-hidden p-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-4">
             Project Dashboard
           </h1>
@@ -508,7 +488,7 @@ const ProjectDashboard = () => {
                       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
                     </div>
                   ) : filteredProjects.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 w-6xl gap-6">
                       {filteredProjects.map((project) => (
                         <ProjectCard
                           key={project._id}
@@ -519,7 +499,7 @@ const ProjectDashboard = () => {
                     </div>
                   ) : (
                     <div className="col-span-full text-center py-12">
-                      <i className="fas fa-folder-open text-4xl text-gray-300 mb-4"></i>
+                      <i className="fas fa-folder-open text-4xl text-gray-300 mb-4 w-6xl gap-6"></i>
                       <p className="text-gray-600">
                         No projects found. Try adjusting your search or filters.
                       </p>
@@ -537,7 +517,7 @@ const ProjectDashboard = () => {
                       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
                     </div>
                   ) : filteredProjects.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 w-6xl gap-6">
                       {filteredProjects.map((project) => (
                         <ProjectCard
                           key={project._id}

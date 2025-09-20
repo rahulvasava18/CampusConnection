@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import {
   Heart,
   MessageCircle,
@@ -18,7 +19,7 @@ import {
 
 import { FaEllipsisH } from "react-icons/fa";
 
-const ProjectCard = ({ project }) => {
+const ProfileProjectCard = ({ userId, project }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [upvotes, setUpvotes] = useState(project?.upvotes || 0);
 
@@ -28,12 +29,43 @@ const ProjectCard = ({ project }) => {
   };
 
   // User data state
-  const [user, setUser] = useState({
-    username: "rahul",
-    fullName: "Rahul Vasava",
-    // profilePicture:
-    //   "https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg",
-  });
+  const [user, setUser] = useState("");
+
+  useEffect(() => {
+    async function fetchUserHeaderData() {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token || !userId) {
+          console.warn("No token or userId found in localStorage");
+          setUser(null);
+          return;
+        }
+
+        const config = {
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true,
+        };
+
+        const response = await axios.get(
+          `http://localhost:3000/api/user/headerdata/${userId}`,
+          config
+        );
+
+        if (response.data) {
+          console.log("User header data:", response.data);
+          setUser(response.data);
+        } else {
+          console.log("No user data found");
+          setUser(null);
+        }
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+        setUser(null);
+      }
+    }
+
+    fetchUserHeaderData();
+  }, []); // depends on `project`
 
   const formatDate = (date) => {
     if (!date) return "Unknown date";
@@ -70,7 +102,7 @@ const ProjectCard = ({ project }) => {
   };
 
   return (
-    <div className="max-w-2xl mb-6 mx-auto bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 transform  overflow-hidden group border border-gray-100">
+    <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 transform transition-transform ">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 shadow-sm bg-gray-50">
         <div className="flex items-center gap-3">
@@ -93,22 +125,23 @@ const ProjectCard = ({ project }) => {
               )}
             </div>
           </div>
-
           <div>
             <h4 className="font-semibold text-gray-900 text-sm">
-              {user.fullName || "Full Name"}
+              {user.fullname || "Full Name"}
             </h4>
             <p className="text-xs text-gray-500">@{user.username}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1.5 rounded-full font-medium hover:opacity-90 transition">
-            View Profile
+          <button className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1.5 rounded-full font-medium hover:opacity-90 transition"
+          onClick={() => alert('Follow feature coming soon!')}>
+            Edit
           </button>
-          {/* <button className="text-gray-500 hover:text-gray-700">
-                 <FaEllipsisH />
-               </button> */}
+          <button className="text-xs bg-gradient-to-r from-red-500 to-red-700 text-white px-3 py-1.5 rounded-full font-medium hover:opacity-90 transition"
+          onClick={() => alert('Delete feature coming soon!')}>
+            Delete
+          </button>
         </div>
       </div>
 
@@ -123,7 +156,7 @@ const ProjectCard = ({ project }) => {
                 project?.image?.url ||
                 "https://via.placeholder.com/600x300/f3f4f6/9ca3af?text=No+Image"
               }
-              alt={"Project Image"}
+              alt={project?.title || "Project Image"}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -224,7 +257,7 @@ const ProjectCard = ({ project }) => {
         <div className="space-y-5">
           {/* Project Title and Description */}
           <div>
-            <h3 className="font-bold text-2xl text-gray-900 mb-3 ">
+            <h3 className="font-bold text-2xl text-gray-900 mb-3 group-hover:text-blue-600 transition-colors duration-200">
               {project?.title || "Untitled Project"}
             </h3>
             <p className="text-gray-600 text-sm leading-relaxed">
@@ -277,6 +310,8 @@ const ProjectCard = ({ project }) => {
             </div>
           )}
 
+          
+
           {/* Stats and Actions */}
           <div className="flex items-center justify-between pt-4 border-t border-gray-200">
             <div className="flex items-center gap-4">
@@ -312,4 +347,4 @@ const ProjectCard = ({ project }) => {
   );
 };
 
-export default ProjectCard;
+export default ProfileProjectCard;

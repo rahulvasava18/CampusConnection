@@ -122,7 +122,7 @@ function Signup() {
           </button>
         </form>
 
-        <div className="mt-8 pt-5 border-t text-center">
+        <div className="mt-8 pt-5 border-t border-gray-200  text-center">
           <p className="text-gray-600 mb-4">Already have an account?</p>
           <button
             onClick={goToLoginPage}

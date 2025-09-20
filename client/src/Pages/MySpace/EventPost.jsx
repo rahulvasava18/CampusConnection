@@ -869,7 +869,7 @@ const EventPost = ({ darkMode, onBack }) => {
                           !dateEnd ||
                           (location !== "Online" && !venue.trim())
                         )
-                          ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                          ? "bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                           : "bg-gray-300 text-gray-500 cursor-not-allowed"
                       }`}
                     >

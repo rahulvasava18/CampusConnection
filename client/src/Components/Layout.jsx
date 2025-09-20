@@ -18,7 +18,7 @@ const Layout = ({ children }) => {
         <Sidebar user={user} />
 
         {/* Content */}
-        <main className="flex-1 h-[calc(100vh-64px)] overflow-auto bg-indigo-100 md:ml-64 p-4">
+        <main className="flex-1 h-[calc(100vh-64px)] overflow-auto bg-indigo-100 md:ml-64">
           {children}
         </main>
       </div>

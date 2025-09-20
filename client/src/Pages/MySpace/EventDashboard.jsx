@@ -223,7 +223,6 @@ const EventDashboard = () => {
             },
           }
         );
-        console.log("Events data fetched:", data);
 
         if (!data || (Array.isArray(data) && data.length === 0)) {
           console.log("No events data received from API. Using dummy data...");
@@ -310,8 +309,8 @@ const EventDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen max-w-6xl mx-auto bg-indigo-100 p-4 md:p-8">
-      <div className="bg-white max-w-6xl mx-auto p-8 rounded-2xl shadow">
+    <div className="min-h-screen mx-auto bg-indigo-100">
+      <div className="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 max-w-7xl mx-auto p-8  shadow">
         <h1 className="text-3xl font-bold text-gray-800 mb-4">
           Event Dashboard
         </h1>

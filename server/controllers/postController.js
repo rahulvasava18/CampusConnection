@@ -174,7 +174,7 @@ export const CommentOnPost = async (req, res) => {
 };
 
 //------------------------------------------------------------------------------------------------------
-export const deleteComment = async (req, res) => {
+export const DeleteComment = async (req, res) => {
     try {
         const postId = req.params.id;
         const { commentId } = req.body;

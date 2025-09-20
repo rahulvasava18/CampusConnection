@@ -3,15 +3,19 @@ import axios from "axios";
 import FeedCard from "./FeedCard";
 import Suggestion from "./Suggestion";
 import EventCard from "./EventCard";
-import ProjectCard from "./ProjectCard"; // optional: use same card for feed view
+import ProjectCard from "./ProjectCard";
+import HomePageLoader from "./HomePageLoader"; // Import the loader
 
 export default function Home() {
   const [feed, setFeed] = useState([]);
+  const [loading, setLoading] = useState(true); // Add loading state
   const userId = localStorage.getItem("userId");
 
   useEffect(() => {
     async function fetchFeed() {
       try {
+        setLoading(true,); 
+
         const token = localStorage.getItem("token");
 
         // Fetch posts
@@ -59,11 +63,22 @@ export default function Home() {
         setFeed(combined);
       } catch (err) {
         console.error("Error fetching feed:", err);
+      } finally {
+        let timer = setTimeout(() => {
+          setLoading(false);
+        }, 2000);
+        return () => clearTimeout(timer);
+    
       }
     }
 
     fetchFeed();
   }, []);
+
+  // Show loader while loading
+  if (loading) {
+    return <HomePageLoader />;
+  }
 
   return (
     <div className="flex h-screen w-auto">
@@ -104,9 +119,10 @@ export default function Home() {
                     image={item.image}
                     attendees={item.attendees}
                     upvotes={item.upvotes}
-                    goingCount={item.goingCount}
+                    goingCounts={item.goingCount}
                     comments={item.comments}
                     createdAt={item.createdAt}
+                    userId={userId}
                   />
                 );
               case "project":
@@ -121,7 +137,7 @@ export default function Home() {
             }
           })
         ) : (
-          <div className="flex flex-col items-center justify-center p-10 text-gray-500 bg-white rounded-lg shadow-md">
+          <div className="flex flex-col items-center justify-center p-10 text-gray-500 bg-white rounded-lg shadow-md m-8">
             <img
               src="https://res.cloudinary.com/dqcnxw5b9/image/upload/v1756223601/default_fmxln5.png"
               alt="No posts"
@@ -136,7 +152,7 @@ export default function Home() {
       </div>
 
       {/* Suggestions Sidebar */}
-      <div className="hidden md:block w-4xs  sticky top-0 h-auto overflow-y-auto">
+      <div className="hidden md:block w-4xs sticky top-0 h-auto overflow-y-auto">
         <Suggestion />
       </div>
     </div>
